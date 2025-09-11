@@ -1,22 +1,21 @@
-import { pool } from "./db";
-
-export async function initialiseViews() {
-  await pool.query(`CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;`);
-
-  await pool.query(`
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.initialiseViews = initialiseViews;
+const db_1 = require("./db");
+async function initialiseViews() {
+    await db_1.pool.query(`CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;`);
+    await db_1.pool.query(`
     DROP MATERIALIZED VIEW IF EXISTS klines_1m CASCADE;
     DROP MATERIALIZED VIEW IF EXISTS klines_15m CASCADE;
     DROP MATERIALIZED VIEW IF EXISTS klines_30m CASCADE;
     DROP MATERIALIZED VIEW IF EXISTS klines_1h CASCADE;
     DROP MATERIALIZED VIEW IF EXISTS klines_1d CASCADE;
   `);
-
-  await pool.query(`
+    await db_1.pool.query(`
     DROP TABLE IF EXISTS trade_prices CASCADE;
     DROP TABLE IF EXISTS trades CASCADE;
   `);
-
-  await pool.query(`
+    await db_1.pool.query(`
     CREATE TABLE "trade_prices"(
         time            TIMESTAMPTZ(6) PRIMARY KEY NOT NULL DEFAULT NOW(),
         price           DOUBLE PRECISION,
@@ -25,8 +24,7 @@ export async function initialiseViews() {
     );
     SELECT create_hypertable('trade_prices', 'time');
   `);
-
-  await pool.query(`
+    await db_1.pool.query(`
         CREATE TABLE trades (
             id            BIGSERIAL,        
             trade_time    TIMESTAMPTZ NOT NULL DEFAULT NOW(), 
@@ -40,8 +38,7 @@ export async function initialiseViews() {
         );
         SELECT create_hypertable('trades', 'trade_time');
   `);
-
-  await pool.query(`CREATE MATERIALIZED VIEW klines_1m
+    await db_1.pool.query(`CREATE MATERIALIZED VIEW klines_1m
     WITH (timescaledb.continuous) AS
     SELECT
         time_bucket('1 minute', time) AS bucket,
@@ -54,8 +51,7 @@ export async function initialiseViews() {
     FROM trade_prices
     GROUP BY bucket, currency_code;
     `);
-
-  await pool.query(`CREATE MATERIALIZED VIEW klines_15m
+    await db_1.pool.query(`CREATE MATERIALIZED VIEW klines_15m
     WITH (timescaledb.continuous) AS
     SELECT
         time_bucket('15 minutes', time) AS bucket,
@@ -68,8 +64,7 @@ export async function initialiseViews() {
     FROM trade_prices
     GROUP BY bucket, currency_code;
     `);
-
-  await pool.query(`CREATE MATERIALIZED VIEW klines_30m
+    await db_1.pool.query(`CREATE MATERIALIZED VIEW klines_30m
     WITH (timescaledb.continuous) AS
     SELECT
         time_bucket('30 minutes', time) AS bucket,
@@ -82,8 +77,7 @@ export async function initialiseViews() {
     FROM trade_prices
     GROUP BY bucket, currency_code;
     `);
-
-  await pool.query(`CREATE MATERIALIZED VIEW klines_1h
+    await db_1.pool.query(`CREATE MATERIALIZED VIEW klines_1h
     WITH (timescaledb.continuous) AS
     SELECT
         time_bucket('1 hour', time) AS bucket,
@@ -96,8 +90,7 @@ export async function initialiseViews() {
     FROM trade_prices
     GROUP BY bucket, currency_code;
     `);
-
-  await pool.query(`CREATE MATERIALIZED VIEW klines_1d
+    await db_1.pool.query(`CREATE MATERIALIZED VIEW klines_1d
     WITH (timescaledb.continuous) AS
     SELECT
         time_bucket('1 day', time) AS bucket,
@@ -110,8 +103,7 @@ export async function initialiseViews() {
     FROM trade_prices
     GROUP BY bucket, currency_code;
     `);
-
-  await pool.query(`
+    await db_1.pool.query(`
     SELECT add_continuous_aggregate_policy('klines_1m',
         start_offset => INTERVAL '1 day',
         end_offset   => INTERVAL '1 minute',
@@ -138,3 +130,4 @@ export async function initialiseViews() {
         schedule_interval => INTERVAL '1 day');
     `);
 }
+//# sourceMappingURL=initialiseViews.js.map

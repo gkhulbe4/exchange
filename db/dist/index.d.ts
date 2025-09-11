@@ -1,4 +1,2 @@
-import { Pool } from "pg";
-import "dotenv/config";
-export declare const pool: Pool;
+export declare function main(): Promise<void>;
 //# sourceMappingURL=index.d.ts.map
