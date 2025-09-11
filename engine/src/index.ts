@@ -5,10 +5,14 @@ async function startEngine() {
   const engine = new Engine();
   const redisClient = new Redis();
   while (true) {
-    const response = await redisClient.rpop("messages" as string);
+    const response = await redisClient.rpop("message" as string);
+    const data = JSON.parse(response as string);
     if (!response) {
     } else {
-      engine.process(JSON.parse(response));
+      // console.log(response, "in startEngine");
+
+      engine.process(data.clientId, data.message);
+      //client id for communicating to that order
     }
   }
 }
