@@ -1,5 +1,5 @@
 import Redis from "ioredis";
-import { MessageToEngine } from "./types";
+import { MessageFromEngine, MessageToEngine } from "./types";
 
 export class RedisManager {
   private static instance: RedisManager;
@@ -20,15 +20,20 @@ export class RedisManager {
   }
 
   public async sendAndAwait(message: MessageToEngine) {
-    return new Promise((resolve) => {
-      const id = this.getRandomClientId();
-      this.subClient.subscribe(id);
-      this.subClient.on("message", (messageFromPublisher) => {
-        resolve(JSON.parse(messageFromPublisher));
+    return new Promise<MessageFromEngine>(async (resolve, reject) => {
+      const clientId = this.getRandomClientId();
+      this.subClient.subscribe(clientId);
+      console.log("in sendAndAwait , sending clientId: ", clientId);
+      this.subClient.on("message", (channel, message) => {
+        if (channel != clientId) reject();
+        this.subClient.unsubscribe(clientId);
+        resolve(JSON.parse(message));
+        // console.log("Order promise done");
+        // console.log(message);
       });
-      this.pubClient.lpush(
+      await this.pubClient.lpush(
         "message",
-        JSON.stringify({ message: message, clientId: id })
+        JSON.stringify({ message: message, clientId: clientId })
       );
     });
   }

@@ -1,3 +1,11 @@
+export type Fill = {
+  price: string;
+  qty: number;
+  tradeId: number;
+  otherUserId: string;
+  markerOrderId: string;
+};
+
 export type MessageToEngine = {
   type: "CREATE_ORDER";
   data: {
@@ -6,5 +14,14 @@ export type MessageToEngine = {
     quantity: number;
     price: number;
     userId: number;
+  };
+};
+
+export type MessageFromEngine = {
+  type: "ORDER_PLACED" | "ORDER_CANCELLED";
+  payload: {
+    orderId: string;
+    executedQuantity: number;
+    fills: Fill[] | [];
   };
 };
