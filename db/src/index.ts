@@ -3,6 +3,7 @@ import { initialiseViews } from "./initialiseViews";
 import { pool } from "./db";
 import { getTradesFromDb } from "./lib/getTradesFromDb";
 import { addTradeInDb } from "./lib/addTradeInDb";
+import { getTickerDataFromDb } from "./lib/getTickerDatafromDb";
 
 export async function main() {
   await initialiseViews();
@@ -27,6 +28,9 @@ export async function main() {
       } else if (message.type == "trades") {
         const data = await getTradesFromDb();
         redisClient.publish("trades", JSON.stringify(data));
+      } else if (message.type == "ticker") {
+        const data = await getTickerDataFromDb();
+        redisClient.publish("ticker", JSON.stringify(data));
       }
     }
   }

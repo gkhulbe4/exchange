@@ -3,25 +3,17 @@ import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 const PriceTicker = () => {
-  const { setUserId, refetchUserBalance } = useWebSocket();
+  const { setUserId, refetchUserBalance, ticker } = useWebSocket();
   const [userIdEntered, setUserIdEntered] = useState("");
-
-  const price = {
-    current: 0,
-    change24h: 0,
-    high24h: 0,
-    low24h: 0,
-    volume24h: 0,
-  };
 
   async function signIn() {
     if (userIdEntered.length == 0) {
       toast.info("Please enter the user Id");
       return;
     }
-
     setUserId(userIdEntered);
     refetchUserBalance();
     toast.success("User signed in successfully");
@@ -44,28 +36,41 @@ const PriceTicker = () => {
 
         <div className="flex items-center gap-1">
           <div className="text-2xl font-mono font-bold">
-            {price.current.toLocaleString("en-IN")}
+            {ticker.price ? (
+              Number(ticker.price).toFixed(2)
+            ) : (
+              <Loader2 className="animate-spin" />
+            )}
           </div>
         </div>
 
-        <div className="flex gap-6 text-sm">
-          <div>
-            <div className="text-muted-foreground text-xs">24h High</div>
-            <div className="font-mono">
-              {price.high24h.toLocaleString("en-IN")}
+        {!ticker.max_price ? (
+          <Loader2 className="animate-spin" />
+        ) : (
+          <div className="flex gap-6 text-sm">
+            <div>
+              <div className="text-muted-foreground text-xs">24h High</div>
+              <div className="font-mono">
+                {Number(ticker.max_price).toFixed(2)}
+              </div>
+            </div>
+            <div>
+              <div className="text-muted-foreground text-xs">24h Low</div>
+              <div className="font-mono">
+                {Number(ticker.min_price).toFixed(2)}
+              </div>
+            </div>
+            <div>
+              <div className="text-muted-foreground text-xs">
+                24h Volume(INR)
+              </div>
+              <div className="font-mono">
+                {" "}
+                {Number(ticker.volume).toFixed(2)}
+              </div>
             </div>
           </div>
-          <div>
-            <div className="text-muted-foreground text-xs">24h Low</div>
-            <div className="font-mono">
-              {price.low24h.toLocaleString("en-IN")}
-            </div>
-          </div>
-          <div>
-            <div className="text-muted-foreground text-xs">24h Volume(INR)</div>
-            <div className="font-mono">{price.volume24h}</div>
-          </div>
-        </div>
+        )}
       </div>
 
       <div className="flex gap-3">
@@ -75,6 +80,11 @@ const PriceTicker = () => {
           placeholder="Enter user Id"
           value={userIdEntered}
           onChange={(e) => setUserIdEntered(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key == "Enter" && userIdEntered.length != 0) {
+              signIn();
+            }
+          }}
         />
         <Button onClick={signIn} className="bg-purple-600 hover:bg-purple-700">
           Sign In

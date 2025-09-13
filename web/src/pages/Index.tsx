@@ -13,21 +13,16 @@ const Index = () => {
     <div className="h-screen bg-background flex flex-col">
       <div className={`h-1 ${isConnected ? "bg-buy" : "bg-sell"}`} />
 
-      {/* Price ticker */}
       <div className="p-2">
         <PriceTicker />
       </div>
 
-      {/* Main content */}
       <div className="flex flex-1 gap-2 p-2 overflow-hidden">
-        {/* Left side: chart + trades/orderbook */}
         <div className="flex-1 flex gap-2 overflow-hidden">
-          {/* Trading chart */}
           <div className="flex-1 bg-card rounded-lg border border-border p-2 overflow-hidden">
             <TradingChart />
           </div>
 
-          {/* OrderBook / Trades tabs */}
           <div className="w-80 bg-card rounded-lg border border-border flex flex-col overflow-hidden">
             <Tabs
               defaultValue="orderBook"
@@ -42,7 +37,6 @@ const Index = () => {
                 </TabsTrigger>
               </TabsList>
 
-              {/* Make tabs content take remaining height */}
               <div className="flex-1 flex flex-col overflow-hidden">
                 <TabsContent
                   value="orderBook"
@@ -62,7 +56,6 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Right side: Order Panel */}
         <div className="w-72 bg-card rounded-lg border border-border flex flex-col overflow-hidden">
           <div className="flex-1 overflow-y-auto p-2">
             <OrderPanel />

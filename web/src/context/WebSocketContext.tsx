@@ -1,5 +1,6 @@
 import { queryClient } from "@/App";
-import { Trade, WebSocketContextType } from "@/lib/types";
+import { Ticker, Trade, WebSocketContextType } from "@/lib/types";
+import { fetchTickerData } from "@/lib/utils/fetchTickerData";
 import { fetchTrades } from "@/lib/utils/fetchTrades";
 import { fetchUserBalance } from "@/lib/utils/fetchUserBalance";
 import { useQuery } from "@tanstack/react-query";
@@ -17,6 +18,12 @@ const WebSocketContext = createContext<WebSocketContextType>({
   setUserBalance: () => {},
   refetchUserBalance: () => {},
   trades: [],
+  ticker: {
+    max_price: null,
+    min_price: null,
+    price: null,
+    volume: null,
+  },
 });
 
 export function useWebSocket() {
@@ -32,12 +39,42 @@ function WebSocketProvider({ children }: { children: React.ReactNode }) {
     SOL: null as number | null,
   });
   const [trades, setTrades] = useState<Trade[]>([]);
+  const [ticker, setTicker] = useState<Ticker>({
+    max_price: null,
+    min_price: null,
+    price: null,
+    volume: null,
+  });
 
   const data = useQuery({
     queryKey: ["userBalance", userId],
     queryFn: () => fetchUserBalance(userId!),
     enabled: !!userId,
   });
+
+  useEffect(() => {
+    async function getTrades() {
+      const data = await fetchTrades();
+      // console.log(data.response);
+      setTrades(data.response);
+    }
+    getTrades();
+  }, []);
+
+  useEffect(() => {
+    async function getTickerData() {
+      const data = await fetchTickerData();
+      console.log(data.response);
+      setTicker((ticker) => ({
+        ...ticker,
+        max_price: data.response.max_price,
+        min_price: data.response.min_price,
+        volume: data.response.volume,
+        price: data.response.last_trade_price,
+      }));
+    }
+    getTickerData();
+  }, []);
 
   useEffect(() => {
     if (!userId) return;
@@ -82,15 +119,6 @@ function WebSocketProvider({ children }: { children: React.ReactNode }) {
     }
   }, [data.data]);
 
-  useEffect(() => {
-    async function getTrades() {
-      const data = await fetchTrades();
-      // console.log(data.response);
-      setTrades(data.response);
-    }
-    getTrades();
-  }, []);
-
   async function refetchUserBalance() {
     if (userId) {
       // console.log("i am here in the refetch");
@@ -111,6 +139,7 @@ function WebSocketProvider({ children }: { children: React.ReactNode }) {
         setUserBalance,
         refetchUserBalance,
         trades,
+        ticker,
       }}
     >
       {children}

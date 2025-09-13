@@ -5,7 +5,6 @@ const RecentTrades = () => {
 
   return (
     <div className="flex flex-col h-full bg-card rounded-lg border border-border overflow-hidden">
-      {/* Header */}
       <div className="p-3 border-b border-border flex-shrink-0">
         <h3 className="font-semibold text-sm mb-2">Recent Trades</h3>
         <div className="grid grid-cols-3 text-xs text-muted-foreground font-medium">
@@ -15,7 +14,6 @@ const RecentTrades = () => {
         </div>
       </div>
 
-      {/* Scrollable Body */}
       <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-border">
         {trades && trades.length > 0 ? (
           trades.map((trade, i) => (

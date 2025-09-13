@@ -8,6 +8,7 @@ const ioredis_1 = __importDefault(require("ioredis"));
 const initialiseViews_1 = require("./initialiseViews");
 const getTradesFromDb_1 = require("./lib/getTradesFromDb");
 const addTradeInDb_1 = require("./lib/addTradeInDb");
+const getTickerDatafromDb_1 = require("./lib/getTickerDatafromDb");
 async function main() {
     await (0, initialiseViews_1.initialiseViews)();
     const redisClient = new ioredis_1.default();
@@ -23,6 +24,10 @@ async function main() {
             else if (message.type == "trades") {
                 const data = await (0, getTradesFromDb_1.getTradesFromDb)();
                 redisClient.publish("trades", JSON.stringify(data));
+            }
+            else if (message.type == "ticker") {
+                const data = await (0, getTickerDatafromDb_1.getTickerDataFromDb)();
+                redisClient.publish("ticker", JSON.stringify(data));
             }
         }
     }

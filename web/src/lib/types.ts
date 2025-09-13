@@ -12,6 +12,7 @@ export type WebSocketContextType = {
   >;
   refetchUserBalance: () => void;
   trades: Trade[];
+  ticker: Ticker;
 };
 
 export type Trade = {
@@ -19,4 +20,11 @@ export type Trade = {
   quantity: string;
   trade_time: string;
   side: string;
+};
+
+export type Ticker = {
+  price: string;
+  max_price: string;
+  min_price: string;
+  volume: string;
 };

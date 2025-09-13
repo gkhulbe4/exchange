@@ -70,6 +70,22 @@ export class RedisManager {
     });
   }
 
+  public getTickerData() {
+    return new Promise(async (resolve) => {
+      this.subClient.subscribe("ticker");
+      await this.pubClient.lpush(
+        "dbMessage",
+        JSON.stringify({ type: "ticker" })
+      );
+      this.subClient.on("message", (channel: string, message: string) => {
+        if (channel == "ticker") {
+          this.subClient.unsubscribe("ticker");
+          resolve(JSON.parse(message));
+        }
+      });
+    });
+  }
+
   public getRandomClientId() {
     return (
       Math.random().toString(36).substring(2, 15) +

@@ -16,4 +16,20 @@ exports.tradeRouter.get("/getTrades", async (req, res) => {
         res.status(500).json({ message: "Error while fetching trades", error });
     }
 });
+exports.tradeRouter.get("/getTickerData", async (req, res) => {
+    try {
+        const response = await RedisManager_1.RedisManager.getInstance().getTickerData();
+        res
+            .status(200)
+            .json({
+            message: "Ticker data fetched successfully",
+            response: response,
+        });
+    }
+    catch (error) {
+        res
+            .status(500)
+            .json({ message: "Error while fetching ticker data", error });
+    }
+});
 //# sourceMappingURL=trade.js.map

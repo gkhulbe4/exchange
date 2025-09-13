@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Slider } from "@/components/ui/slider";
 import { Info } from "lucide-react";
 import { useWebSocket } from "@/context/WebSocketContext";
 import { toast } from "sonner";
@@ -205,11 +203,6 @@ const OrderPanel = () => {
           >
             {side === "buy" ? "Buy" : "Sell"} SOL
           </Button>
-
-          {/* <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Info className="w-3 h-3" />
-            <span>Login to trade</span>
-          </div> */}
         </div>
       </div>
     </div>

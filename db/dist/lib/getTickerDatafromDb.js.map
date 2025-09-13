@@ -1,0 +1,1 @@
+{"version":3,"file":"getTickerDatafromDb.js","sourceRoot":"","sources":["../../src/lib/getTickerDatafromDb.ts"],"names":[],"mappings":";;AAEA,kDAcC;AAhBD,8BAA6B;AAEtB,KAAK,UAAU,mBAAmB;IACvC,MAAM,KAAK,GAAG;;;;;;;;;;gDAUgC,CAAC;IAC/C,MAAM,GAAG,GAAG,MAAM,SAAI,CAAC,KAAK,CAAC,KAAK,CAAC,CAAC;IACpC,OAAO,GAAG,CAAC,IAAI,CAAC,CAAC,CAAC,CAAC;AACrB,CAAC"}
