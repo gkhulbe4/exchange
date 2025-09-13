@@ -75,7 +75,8 @@ class OrderBook {
                     qty: filled,
                     tradeId: this.lastTradeId++,
                     otherUserId: ask.userId,
-                    markerOrderId: ask.orderId,
+                    marketOrderId: ask.orderId,
+                    time: Date.now(),
                 });
                 console.log(`🤝 Matched BUY ${filled} @ ${ask.price}`);
             }
@@ -99,7 +100,8 @@ class OrderBook {
                     qty: filled,
                     tradeId: this.lastTradeId++,
                     otherUserId: bid.userId,
-                    markerOrderId: bid.orderId,
+                    marketOrderId: bid.orderId,
+                    time: Date.now(),
                 });
                 console.log(`🤝 Matched SELL ${filled} @ ${bid.price}`);
             }

@@ -32,4 +32,9 @@ export class RedisManager {
     console.log("publishing to:", clientId);
     this.pubClient.publish(clientId, JSON.stringify(message));
   }
+
+  async sendUserBalance(userBalance: string) {
+    // console.log(userBalance);
+    this.pubClient.publish("userBalance", userBalance);
+  }
 }

@@ -12,18 +12,9 @@ async function initialiseViews() {
     DROP MATERIALIZED VIEW IF EXISTS klines_1d CASCADE;
   `);
     await db_1.pool.query(`
-    DROP TABLE IF EXISTS trade_prices CASCADE;
     DROP TABLE IF EXISTS trades CASCADE;
   `);
-    await db_1.pool.query(`
-    CREATE TABLE "trade_prices"(
-        time            TIMESTAMPTZ(6) PRIMARY KEY NOT NULL DEFAULT NOW(),
-        price           DOUBLE PRECISION,
-        volume          DOUBLE PRECISION,
-        currency_code   VARCHAR (10)
-    );
-    SELECT create_hypertable('trade_prices', 'time');
-  `);
+    // i should create an index on market
     await db_1.pool.query(`
         CREATE TABLE trades (
             id            BIGSERIAL,        
@@ -33,75 +24,76 @@ async function initialiseViews() {
             side          VARCHAR(4) NOT NULL,        
             price         NUMERIC(20, 8) NOT NULL,  
             quantity      NUMERIC(20, 8) NOT NULL,
+            volume        NUMERIC(38, 16) GENERATED ALWAYS AS (price * quantity) STORED,
             market        VARCHAR(10) NOT NULL, 
-            PRIMARY KEY (id, trade_time) 
+            PRIMARY KEY   (id, trade_time) 
         );
         SELECT create_hypertable('trades', 'trade_time');
   `);
     await db_1.pool.query(`CREATE MATERIALIZED VIEW klines_1m
     WITH (timescaledb.continuous) AS
     SELECT
-        time_bucket('1 minute', time) AS bucket,
-        first(price, time) AS open,
+        time_bucket('1 minute', trade_time) AS bucket,
+        first(price, trade_time) AS open,
         max(price) AS high,
         min(price) AS low,
-        last(price, time) AS close,
+        last(price, trade_time) AS close,
         sum(volume) AS volume,
-        currency_code
-    FROM trade_prices
-    GROUP BY bucket, currency_code;
+        market
+    FROM trades
+    GROUP BY bucket, market;
     `);
     await db_1.pool.query(`CREATE MATERIALIZED VIEW klines_15m
     WITH (timescaledb.continuous) AS
     SELECT
-        time_bucket('15 minutes', time) AS bucket,
-        first(price, time) AS open,
+        time_bucket('15 minutes', trade_time) AS bucket,
+        first(price, trade_time) AS open,
         max(price) AS high,
         min(price) AS low,
-        last(price, time) AS close,
+        last(price, trade_time) AS close,
         sum(volume) AS volume,
-        currency_code
-    FROM trade_prices
-    GROUP BY bucket, currency_code;
+        market
+    FROM trades
+    GROUP BY bucket, market;
     `);
     await db_1.pool.query(`CREATE MATERIALIZED VIEW klines_30m
     WITH (timescaledb.continuous) AS
     SELECT
-        time_bucket('30 minutes', time) AS bucket,
-        first(price, time) AS open,
+        time_bucket('30 minutes', trade_time) AS bucket,
+        first(price, trade_time) AS open,
         max(price) AS high,
         min(price) AS low,
-        last(price, time) AS close,
+        last(price, trade_time) AS close,
         sum(volume) AS volume,
-        currency_code
-    FROM trade_prices
-    GROUP BY bucket, currency_code;
+        market
+    FROM trades
+    GROUP BY bucket, market;
     `);
     await db_1.pool.query(`CREATE MATERIALIZED VIEW klines_1h
     WITH (timescaledb.continuous) AS
     SELECT
-        time_bucket('1 hour', time) AS bucket,
-        first(price, time) AS open,
+        time_bucket('1 hour', trade_time) AS bucket,
+        first(price, trade_time) AS open,
         max(price) AS high,
         min(price) AS low,
-        last(price, time) AS close,
+        last(price, trade_time) AS close,
         sum(volume) AS volume,
-        currency_code
-    FROM trade_prices
-    GROUP BY bucket, currency_code;
+        market
+    FROM trades
+    GROUP BY bucket, market;
     `);
     await db_1.pool.query(`CREATE MATERIALIZED VIEW klines_1d
     WITH (timescaledb.continuous) AS
     SELECT
-        time_bucket('1 day', time) AS bucket,
-        first(price, time) AS open,
+        time_bucket('1 day', trade_time) AS bucket,
+        first(price, trade_time) AS open,
         max(price) AS high,
         min(price) AS low,
-        last(price, time) AS close,
+        last(price, trade_time) AS close,
         sum(volume) AS volume,
-        currency_code
-    FROM trade_prices
-    GROUP BY bucket, currency_code;
+        market
+    FROM trades
+    GROUP BY bucket, market;
     `);
     await db_1.pool.query(`
     SELECT add_continuous_aggregate_policy('klines_1m',

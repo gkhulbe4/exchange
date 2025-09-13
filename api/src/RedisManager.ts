@@ -38,6 +38,38 @@ export class RedisManager {
     });
   }
 
+  public async getUserBalance(userId: string) {
+    // console.log("pushing to userBalance");
+    return new Promise(async (resolve) => {
+      await this.pubClient.lpush(
+        "message",
+        JSON.stringify({ type: "userBalance", userId: userId })
+      );
+      this.subClient.subscribe("userBalance");
+      this.subClient.on("message", (channel: string, message: string) => {
+        // console.log(channel, message);
+        this.subClient.unsubscribe("userBalance");
+        resolve(JSON.parse(message));
+      });
+    });
+  }
+
+  public getTrades() {
+    return new Promise(async (resolve) => {
+      this.subClient.subscribe("trades");
+      await this.pubClient.lpush(
+        "dbMessage",
+        JSON.stringify({ type: "trades" })
+      );
+      this.subClient.on("message", (channel: string, message: string) => {
+        if (channel == "trades") {
+          this.subClient.unsubscribe("trades");
+          resolve(JSON.parse(message));
+        }
+      });
+    });
+  }
+
   public getRandomClientId() {
     return (
       Math.random().toString(36).substring(2, 15) +

@@ -27,6 +27,11 @@ class Engine {
             SOL: { available: 1000, locked: 0 },
         });
     }
+    getUserBalance(userId) {
+        const userBalance = this.balances.get(userId);
+        // console.log("user balance:", userBalance);
+        RedisManager_1.RedisManager.getInstance().sendUserBalance(JSON.stringify(userBalance));
+    }
     checkBalanceAndLock(baseAsset, quoteAsset, side, price, quantity, userId) {
         // console.log("in check balance");
         const user = this.balances.get(userId);
@@ -130,6 +135,7 @@ class Engine {
                     p: fill.price,
                     q: fill.qty,
                     s: market,
+                    T: fill.time,
                 },
             });
         });
@@ -183,6 +189,7 @@ class Engine {
                 console.log("IN ENGINE PROCESS (ORDER PLACED):");
                 console.log({ executedQuantity, fills, orderId });
                 console.log("sending to client Id:", clientId);
+                // sending response back to API Server
                 RedisManager_1.RedisManager.getInstance().sendToApi(clientId, {
                     type: "ORDER_PLACED",
                     data: {

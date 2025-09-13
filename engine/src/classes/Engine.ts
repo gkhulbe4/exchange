@@ -40,6 +40,12 @@ export class Engine {
     });
   }
 
+  getUserBalance(userId: string) {
+    const userBalance = this.balances.get(userId);
+    // console.log("user balance:", userBalance);
+    RedisManager.getInstance().sendUserBalance(JSON.stringify(userBalance));
+  }
+
   checkBalanceAndLock(
     baseAsset: "SOL",
     quoteAsset: "INR",
@@ -168,6 +174,7 @@ export class Engine {
           p: fill.price,
           q: fill.qty,
           s: market,
+          T: fill.time,
         },
       });
     });
@@ -253,6 +260,8 @@ export class Engine {
         console.log({ executedQuantity, fills, orderId });
 
         console.log("sending to client Id:", clientId);
+
+        // sending response back to API Server
         RedisManager.getInstance().sendToApi(clientId, {
           type: "ORDER_PLACED",
           data: {

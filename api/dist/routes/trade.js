@@ -1,0 +1,19 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.tradeRouter = void 0;
+const express_1 = require("express");
+const RedisManager_1 = require("../RedisManager");
+exports.tradeRouter = (0, express_1.Router)();
+exports.tradeRouter.get("/getTrades", async (req, res) => {
+    try {
+        const response = await RedisManager_1.RedisManager.getInstance().getTrades();
+        // console.log(response);
+        res
+            .status(200)
+            .json({ message: "Trades fetched successfully", response: response });
+    }
+    catch (error) {
+        res.status(500).json({ message: "Error while fetching trades", error });
+    }
+});
+//# sourceMappingURL=trade.js.map

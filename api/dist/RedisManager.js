@@ -35,6 +35,30 @@ class RedisManager {
             await this.pubClient.lpush("message", JSON.stringify({ message: message, clientId: clientId }));
         });
     }
+    async getUserBalance(userId) {
+        // console.log("pushing to userBalance");
+        return new Promise(async (resolve) => {
+            await this.pubClient.lpush("message", JSON.stringify({ type: "userBalance", userId: userId }));
+            this.subClient.subscribe("userBalance");
+            this.subClient.on("message", (channel, message) => {
+                // console.log(channel, message);
+                this.subClient.unsubscribe("userBalance");
+                resolve(JSON.parse(message));
+            });
+        });
+    }
+    getTrades() {
+        return new Promise(async (resolve) => {
+            this.subClient.subscribe("trades");
+            await this.pubClient.lpush("dbMessage", JSON.stringify({ type: "trades" }));
+            this.subClient.on("message", (channel, message) => {
+                if (channel == "trades") {
+                    this.subClient.unsubscribe("trades");
+                    resolve(JSON.parse(message));
+                }
+            });
+        });
+    }
     getRandomClientId() {
         return (Math.random().toString(36).substring(2, 15) +
             Math.random().toString(36).substring(2, 15));

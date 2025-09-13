@@ -1,0 +1,76 @@
+import PriceTicker from "@/components/PriceTicker";
+import TradingChart from "@/components/TradingChart";
+import OrderBook from "@/components/OrderBook";
+import RecentTrades from "@/components/RecentTrades";
+import OrderPanel from "@/components/OrderPanel";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useWebSocket } from "@/context/WebSocketContext";
+
+const Index = () => {
+  const { isConnected } = useWebSocket();
+
+  return (
+    <div className="h-screen bg-background flex flex-col">
+      <div className={`h-1 ${isConnected ? "bg-buy" : "bg-sell"}`} />
+
+      {/* Price ticker */}
+      <div className="p-2">
+        <PriceTicker />
+      </div>
+
+      {/* Main content */}
+      <div className="flex flex-1 gap-2 p-2 overflow-hidden">
+        {/* Left side: chart + trades/orderbook */}
+        <div className="flex-1 flex gap-2 overflow-hidden">
+          {/* Trading chart */}
+          <div className="flex-1 bg-card rounded-lg border border-border p-2 overflow-hidden">
+            <TradingChart />
+          </div>
+
+          {/* OrderBook / Trades tabs */}
+          <div className="w-80 bg-card rounded-lg border border-border flex flex-col overflow-hidden">
+            <Tabs
+              defaultValue="orderBook"
+              className="flex-1 flex flex-col overflow-hidden"
+            >
+              <TabsList className="border-b border-border flex-shrink-0">
+                <TabsTrigger value="orderBook" className="flex-1">
+                  Order Book
+                </TabsTrigger>
+                <TabsTrigger value="recentTrades" className="flex-1">
+                  Trades
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Make tabs content take remaining height */}
+              <div className="flex-1 flex flex-col overflow-hidden">
+                <TabsContent
+                  value="orderBook"
+                  className="flex-1 overflow-y-auto p-2"
+                >
+                  <OrderBook />
+                </TabsContent>
+
+                <TabsContent
+                  value="recentTrades"
+                  className="flex-1 overflow-y-auto p-2"
+                >
+                  <RecentTrades />
+                </TabsContent>
+              </div>
+            </Tabs>
+          </div>
+        </div>
+
+        {/* Right side: Order Panel */}
+        <div className="w-72 bg-card rounded-lg border border-border flex flex-col overflow-hidden">
+          <div className="flex-1 overflow-y-auto p-2">
+            <OrderPanel />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Index;

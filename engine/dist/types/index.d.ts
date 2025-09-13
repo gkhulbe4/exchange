@@ -20,7 +20,8 @@ export type Fill = {
     qty: number;
     tradeId: number;
     otherUserId: string;
-    markerOrderId: string;
+    marketOrderId: string;
+    time: number;
 };
 export type DBMessage = {
     type: "ADD_TRADE";
@@ -49,6 +50,7 @@ export type PublishToWS = {
         p: string;
         q: number;
         s: string;
+        T: number;
     };
 };
 //# sourceMappingURL=index.d.ts.map

@@ -10,9 +10,13 @@ async function startEngine() {
     if (!response) {
     } else {
       // console.log(response, "in startEngine");
-
-      engine.process(data.clientId, data.message);
-      //client id for communicating to that order
+      // console.log(data);
+      if (data.type == "userBalance") {
+        engine.getUserBalance(data.userId);
+      } else {
+        engine.process(data.clientId, data.message);
+        //client id for communicating to that order
+      }
     }
   }
 }
