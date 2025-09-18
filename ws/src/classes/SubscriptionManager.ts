@@ -72,6 +72,7 @@ export class SubscriptionManager {
 
   startRedisListener(channel: string, message: string) {
     const allUsers = this.reverseSubscriptions.get(channel);
+    // console.log(allUsers);
     // console.log(`message from ${channel}: ${JSON.parse(message)}`);
     allUsers?.map((userId: string) => {
       UserManager.getInstance().getUser(userId)?.send(message);

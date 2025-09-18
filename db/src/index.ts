@@ -4,6 +4,7 @@ import { pool } from "./db";
 import { getTradesFromDb } from "./lib/getTradesFromDb";
 import { addTradeInDb } from "./lib/addTradeInDb";
 import { getTickerDataFromDb } from "./lib/getTickerDatafromDb";
+import { getKlineDataFromDb } from "./lib/getKlineDataFromDb";
 
 export async function main() {
   await initialiseViews();
@@ -31,6 +32,9 @@ export async function main() {
       } else if (message.type == "ticker") {
         const data = await getTickerDataFromDb();
         redisClient.publish("ticker", JSON.stringify(data));
+      } else if (message.type == "kline") {
+        const data = await getKlineDataFromDb(message.timeFrame);
+        redisClient.publish("kline", JSON.stringify(data));
       }
     }
   }

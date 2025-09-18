@@ -6,7 +6,8 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
 const PriceTicker = () => {
-  const { setUserId, refetchUserBalance, ticker } = useWebSocket();
+  const { setUserId, refetchUserBalance, ticker, userId, setUserBalance } =
+    useWebSocket();
   const [userIdEntered, setUserIdEntered] = useState("");
 
   async function signIn() {
@@ -19,14 +20,28 @@ const PriceTicker = () => {
     toast.success("User signed in successfully");
   }
 
+  async function signOut() {
+    setUserId(null);
+    setUserBalance({
+      INR: null,
+      SOL: null,
+    });
+    toast.success("User signed out successfully");
+  }
+
   return (
     <div className="h-16 bg-card border-b border-border flex items-center justify-between px-4">
       <div className="flex items-center gap-8">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-xs">SOL</span>
+            <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-black">
+              <img
+                src="https://i.pinimg.com/736x/bd/f5/06/bdf5066589b7865a55d6790c210dba6d.jpg"
+                alt="SOL"
+                className="w-full h-full object-cover"
+              />
             </div>
+
             <div>
               <div className="font-semibold text-sm">SOL/INR</div>
               <div className="text-xs text-muted-foreground">Solana</div>
@@ -74,20 +89,35 @@ const PriceTicker = () => {
       </div>
 
       <div className="flex gap-3">
-        <Input
-          className="bg-secondary border-border font-mono pr-12 focus:outline-none focus-visible:ring-2 focus-visible:!ring-purple-500"
-          type="text"
-          placeholder="Enter user Id"
-          value={userIdEntered}
-          onChange={(e) => setUserIdEntered(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key == "Enter" && userIdEntered.length != 0) {
+        {!userId && (
+          <Input
+            className="bg-secondary border-border font-mono pr-12 focus:outline-none focus-visible:ring-2 focus-visible:!ring-purple-500"
+            type="text"
+            placeholder="Enter user Id"
+            value={userIdEntered}
+            onChange={(e) => setUserIdEntered(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key == "Enter" && userIdEntered.length != 0) {
+                signIn();
+              }
+            }}
+          />
+        )}
+        <Button
+          onClick={() => {
+            if (!userId) {
               signIn();
+            } else {
+              signOut();
             }
           }}
-        />
-        <Button onClick={signIn} className="bg-purple-600 hover:bg-purple-700">
-          Sign In
+          className={`${
+            !userId
+              ? "bg-purple-600 hover:bg-purple-700"
+              : "bg-red-600 hover:bg-red-700"
+          }`}
+        >
+          {!userId ? " Sign In" : "Sign Out"}
         </Button>
       </div>
     </div>

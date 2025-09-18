@@ -1,0 +1,16 @@
+- update balance as the order gets filled
+
+- remaining amount
+
+- restrict self fill
+
+- margin is too much in mm orders
+
+- cancel orders
+
+- add new candle in real time 
+
+- show upcoming candle price fluctuation in real time in chart
+
+
+

@@ -43,14 +43,29 @@ export type DBMessage = {
     };
 };
 export type PublishToWS = {
-    stream: string;
+    stream: "trade";
     data: {
         e: string;
         t: number;
         p: string;
         q: number;
         s: string;
+        m: string;
+        o: string;
+        of: string;
         T: number;
+    };
+} | {
+    stream: "order";
+    data: {
+        e: string;
+        o: string;
+        f: number;
+        p: number;
+        q: number;
+        s: string;
+        m: string;
+        u: string;
     };
 };
 //# sourceMappingURL=index.d.ts.map

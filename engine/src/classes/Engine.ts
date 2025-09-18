@@ -1,5 +1,5 @@
 import { Fill, MessageFromApi, OrderDetails } from "../types";
-import { OrderBook } from "./OrderBook";
+import { Order, OrderBook } from "./OrderBook";
 import { RedisManager } from "./RedisManager";
 
 interface AssetBalance {
@@ -23,20 +23,28 @@ export class Engine {
     // console.log(this.orderbooks);
 
     this.balances.set("1", {
-      INR: { available: 10000, locked: 0 },
-      SOL: { available: 5000, locked: 0 },
+      INR: { available: 100000, locked: 0 },
+      SOL: { available: 500000, locked: 0 },
     });
     this.balances.set("2", {
-      INR: { available: 100, locked: 0 },
-      SOL: { available: 90, locked: 0 },
+      INR: { available: 10000, locked: 0 },
+      SOL: { available: 90000, locked: 0 },
     });
     this.balances.set("3", {
-      INR: { available: 1000, locked: 0 },
-      SOL: { available: 50, locked: 0 },
+      INR: { available: 100000, locked: 0 },
+      SOL: { available: 50000, locked: 0 },
     });
     this.balances.set("4", {
-      INR: { available: 1000, locked: 0 },
-      SOL: { available: 1000, locked: 0 },
+      INR: { available: 100000, locked: 0 },
+      SOL: { available: 100000, locked: 0 },
+    });
+    this.balances.set("5", {
+      INR: { available: 100000, locked: 0 },
+      SOL: { available: 100000, locked: 0 },
+    });
+    this.balances.set("6", {
+      INR: { available: 100000, locked: 0 },
+      SOL: { available: 100000, locked: 0 },
     });
   }
 
@@ -163,7 +171,13 @@ export class Engine {
     });
   }
 
-  publishWsTrades(fills: Fill[], userId: string, market: string) {
+  publishWsTrades(
+    fills: Fill[],
+    userId: string,
+    market: string,
+    side: string,
+    orderId: string
+  ) {
     console.log("Publishing TRADE");
     fills.forEach((fill: Fill) => {
       RedisManager.getInstance().publishToWs(`trades`, {
@@ -173,10 +187,42 @@ export class Engine {
           t: fill.tradeId,
           p: fill.price,
           q: fill.qty,
-          s: market,
+          m: market,
+          s: side,
+          o: orderId, // order that filled the order
+          of: fill.marketOrderId, // order that got filled
           T: fill.time,
         },
       });
+    });
+  }
+
+  publishWsOrder(
+    order: {
+      baseAsset: string;
+      quoteAsset: string;
+      side: "buy" | "sell";
+      price: number;
+      quantity: number;
+      userId: string;
+      orderId: string;
+      filled: number;
+      market: string;
+    } | null
+  ) {
+    console.log("Publishing Order");
+    RedisManager.getInstance().publishToWs("order", {
+      stream: "order",
+      data: {
+        e: "order",
+        f: order?.filled as number,
+        m: order?.market as string,
+        o: order?.orderId as string,
+        p: order?.price as number,
+        q: order?.quantity as number,
+        s: order?.side as string,
+        u: order?.userId as string,
+      },
     });
   }
 
@@ -218,9 +264,12 @@ export class Engine {
     };
     console.log("order:", order);
 
-    const { fills, executedQuantity } = orderbook.addOrder(order);
+    const { fills, executedQuantity, remainingOrder } =
+      orderbook.addOrder(order);
 
-    //updating the balances
+    // console.log("New order :", order)
+
+    //updating the lock balances
     this.updateBalances(
       baseAsset as string as "SOL",
       quoteAsset as string as "INR",
@@ -237,7 +286,23 @@ export class Engine {
       orderDetails.side
     );
 
-    this.publishWsTrades(fills, orderDetails.userId, orderDetails.market);
+    // publishWsOrder
+    // - get remaining order with all the details like filled , quantity , orderId, price and send to publishWs
+    // - in frontend it will catch all the orders and show in the orderbook with colors
+    // - also send order Id with the trade ws so that it can be checked in the frontend. If filled == quantity and remove the order from the array and show updated orders in the orderbook
+
+    this.publishWsTrades(
+      fills,
+      orderDetails.userId,
+      orderDetails.market,
+      orderDetails.side,
+      order.orderId
+    );
+
+    if (remainingOrder) {
+      // @ts-ignore
+      this.publishWsOrder(remainingOrder);
+    }
 
     return { executedQuantity, fills, orderId: order.orderId };
   }
@@ -282,5 +347,21 @@ export class Engine {
         });
       }
     }
+  }
+
+  getOrders() {
+    const o = this.orderbooks[0];
+    RedisManager.getInstance().sendOrders(
+      JSON.stringify({ buys: o?.bids, asks: o?.asks })
+    );
+  }
+
+  getUserOrders(userId: string) {
+    const o = this.orderbooks[0];
+    const bids = o?.bids.filter((order) => order.userId == userId);
+    const asks = o?.asks.filter((order) => order.userId == userId);
+    RedisManager.getInstance().sendUserOrders(
+      JSON.stringify({ buys: bids, asks: asks })
+    );
   }
 }

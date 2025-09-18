@@ -1,5 +1,5 @@
 import { Fill } from "../types";
-interface Order {
+export interface Order {
     market: string;
     side: "buy" | "sell";
     quantity: number;
@@ -22,6 +22,7 @@ export declare class OrderBook {
     addOrder(order: Order): {
         executedQuantity: number;
         fills: Fill[];
+        remainingOrder: Order | null;
     };
     matchBid(price: number, quantity: number): {
         fills: Fill[];
@@ -32,5 +33,4 @@ export declare class OrderBook {
         executedQuantity: number;
     };
 }
-export {};
 //# sourceMappingURL=OrderBook.d.ts.map

@@ -34,6 +34,12 @@ class RedisManager {
         // console.log(userBalance);
         this.pubClient.publish("userBalance", userBalance);
     }
+    async sendOrders(order) {
+        this.pubClient.publish("order", order);
+    }
+    async sendUserOrders(orders) {
+        this.pubClient.publish("userOrders", orders);
+    }
 }
 exports.RedisManager = RedisManager;
 //# sourceMappingURL=RedisManager.js.map

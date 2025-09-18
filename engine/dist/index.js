@@ -19,6 +19,12 @@ async function startEngine() {
             if (data.type == "userBalance") {
                 engine.getUserBalance(data.userId);
             }
+            else if (data.type == "order") {
+                engine.getOrders();
+            }
+            else if (data.type == "userOrders") {
+                engine.getUserOrders(data.userId);
+            }
             else {
                 engine.process(data.clientId, data.message);
                 //client id for communicating to that order

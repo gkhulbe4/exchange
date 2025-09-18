@@ -48,14 +48,32 @@ export type DBMessage =
       };
     };
 
-export type PublishToWS = {
-  stream: string;
-  data: {
-    e: string;
-    t: number;
-    p: string;
-    q: number;
-    s: string;
-    T: number;
-  };
-};
+export type PublishToWS =
+  | {
+      stream: "trade";
+      data: {
+        e: string; // event
+        t: number; // trade id
+        p: string; // price
+        q: number; // quantity
+        s: string; // side
+        m: string; // market
+        o: string; // order id
+        of: string;
+        T: number; // time of trade
+      };
+    }
+  | {
+      stream: "order";
+      data: {
+        e: string; // event
+        o: string; // orderId
+        f: number; // fill
+        p: number; // price
+        q: number; // quantity
+        s: string; // side
+        m: string; // market
+        u: string;
+        // T: number; // time mp
+      };
+    };

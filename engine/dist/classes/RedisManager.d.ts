@@ -10,5 +10,7 @@ export declare class RedisManager {
     publishToWs(channel: string, data: PublishToWS): Promise<void>;
     sendToApi(clientId: string, message: DBMessage): Promise<void>;
     sendUserBalance(userBalance: string): Promise<void>;
+    sendOrders(order: string): Promise<void>;
+    sendUserOrders(orders: string): Promise<void>;
 }
 //# sourceMappingURL=RedisManager.d.ts.map

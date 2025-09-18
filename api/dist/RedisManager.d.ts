@@ -8,7 +8,10 @@ export declare class RedisManager {
     sendAndAwait(message: MessageToEngine): Promise<MessageFromEngine>;
     getUserBalance(userId: string): Promise<unknown>;
     getTrades(): Promise<unknown>;
+    getOrders(): Promise<unknown>;
     getTickerData(): Promise<unknown>;
+    getKlineData(timeFrame: string): Promise<unknown>;
+    getUserOrders(userId: string): Promise<unknown>;
     getRandomClientId(): string;
 }
 //# sourceMappingURL=RedisManager.d.ts.map

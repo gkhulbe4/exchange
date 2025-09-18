@@ -1,6 +1,6 @@
 import { Fill, OrderDetails } from "../types";
 
-interface Order {
+export interface Order {
   market: string;
   side: "buy" | "sell";
   quantity: number;
@@ -46,12 +46,9 @@ export class OrderBook {
     console.log("Asks: ", this.asks);
   }
 
+  // prevent self trade in matchAsk and matchBid
   addOrder(order: Order) {
-    console.log(
-      `📥 New Order: ${order.side.toUpperCase()} ${order.quantity} @ ${
-        order.price
-      }`
-    );
+    let remainingOrder: Order | null = null;
 
     const { executedQuantity, fills } =
       order.side === "buy"
@@ -60,12 +57,8 @@ export class OrderBook {
 
     order.filled = executedQuantity;
 
-    console.log("Fills:", fills);
-    console.log("Executed Qty:", executedQuantity);
-
-    // push the one who are not fully executed
     if (executedQuantity < order.quantity) {
-      const remainingOrder: Order = { ...order };
+      remainingOrder = { ...order }; // not fully executed
       if (order.side === "buy") {
         this.bids.push(remainingOrder);
         this.sortBids();
@@ -78,9 +71,7 @@ export class OrderBook {
       console.log("✅ Fully executed order, not added to book.");
     }
 
-    this.getOrderBook();
-
-    return { executedQuantity, fills };
+    return { executedQuantity, fills, remainingOrder };
   }
 
   matchBid(price: number, quantity: number) {

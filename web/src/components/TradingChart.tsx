@@ -1,17 +1,31 @@
-import { useEffect, useRef, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import axios from "axios";
+import CandleChart from "./CandleChart";
+import { Kline } from "@/lib/types";
 
 const TradingChart = () => {
-  const chartRef = useRef<HTMLDivElement>(null);
-  const [timeFrame, setTimeFrame] = useState("1d");
+  const [timeFrame, setTimeFrame] = useState("15m");
+  const [chartData, setChartData] = useState<Kline[]>([]);
 
   useEffect(() => {
-    // Placeholder for chart initialization
-    // In production, you'd integrate with TradingView or similar library
-  }, []);
+    async function getChartData() {
+      try {
+        const res = await axios.get(
+          `http://localhost:3001/api/v1/trade/getKlineData?timeFrame=${timeFrame}`
+        );
+        const data: Kline[] = res.data.response;
+        // console.log(data);
+        setChartData(data);
+      } catch (error) {
+        console.error(error);
+      }
+    }
 
-  const timeframes = ["1m", "5m", "15m", "30m", "1h", "1d"];
+    getChartData();
+  }, [timeFrame]);
+
+  const timeframes = ["1m", "15m", "30m", "1h", "1d"];
 
   return (
     <div className="h-full flex flex-col bg-card rounded-lg border border-border">
@@ -34,13 +48,15 @@ const TradingChart = () => {
           ))}
         </div>
       </div>
-      <div ref={chartRef} className="flex-1 bg-chart-bg p-4">
-        <div className="h-full flex items-center justify-center text-muted-foreground">
-          <div className="text-center">
-            <div className="text-sm mb-2">SOL/INR Chart</div>
-            <div className="text-xs">TradingView integration would go here</div>
+
+      <div className="flex-1 bg-chart-bg p-4">
+        {chartData.length > 0 ? (
+          <CandleChart chartData={chartData} />
+        ) : (
+          <div className="h-full flex items-center justify-center text-muted-foreground">
+            Loading chart...
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

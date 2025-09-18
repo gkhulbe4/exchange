@@ -1,127 +1,103 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { useWebSocket } from '@/context/WebSocketContext';
+import { AggregatedOrder, useWebSocket } from "@/context/WebSocketContext";
+import { useEffect } from "react";
 
-interface OrderBookEntry {
-  price: number;
-  amount: number;
-  total: number;
-}
+export default function OrderBook() {
+  const { orders, ticker } = useWebSocket();
 
-const OrderBook = () => {
-  const { socket } = useWebSocket();
-  const [view, setView] = useState<'all' | 'buy' | 'sell'>('all');
+  const bids = orders.bids || [];
+  const asks = orders.asks || [];
 
-  // Order book data will come from WebSocket
-  const asks: OrderBookEntry[] = [];
-  const bids: OrderBookEntry[] = [];
+  // Debug logging
+  useEffect(() => {
+    console.log("OrderBook - Current orders:", { bids, asks });
+  }, [bids, asks]);
 
+  // calculate max total (for depth % calculation)
   const maxTotal = Math.max(
-    ...asks.map(a => a.total),
-    ...bids.map(b => b.total),
-    1 // Prevent division by zero
+    bids.length ? bids[bids.length - 1].total : 0,
+    asks.length ? asks[asks.length - 1].total : 0
   );
 
-  return (
-    <div className="h-full flex flex-col bg-card rounded-lg border border-border">
-      <div className="p-3 border-b border-border">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-sm">Order Book</h3>
-          <div className="flex gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`p-1 ${view === 'all' ? 'bg-secondary' : ''}`}
-              onClick={() => setView('all')}
-            >
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
-                <rect x="0" y="0" width="14" height="6" className="fill-sell" opacity="0.8"/>
-                <rect x="0" y="8" width="14" height="6" className="fill-buy" opacity="0.8"/>
-              </svg>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`p-1 ${view === 'buy' ? 'bg-secondary' : ''}`}
-              onClick={() => setView('buy')}
-            >
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
-                <rect x="0" y="0" width="14" height="14" className="fill-buy" opacity="0.8"/>
-              </svg>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`p-1 ${view === 'sell' ? 'bg-secondary' : ''}`}
-              onClick={() => setView('sell')}
-            >
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
-                <rect x="0" y="0" width="14" height="14" className="fill-sell" opacity="0.8"/>
-              </svg>
-            </Button>
-          </div>
+  // best bid/ask
+  const bestBid = bids[0]?.price || null;
+  const bestAsk = asks[0]?.price || null;
+  const midPrice =
+    bestBid && bestAsk ? ((bestBid + bestAsk) / 2).toFixed(2) : null;
+
+  const renderRow = (o: AggregatedOrder, side: "buy" | "sell", i: number) => {
+    const percent = maxTotal > 0 ? (o.total / maxTotal) * 100 : 0;
+    const fillPercent =
+      o.amount + o.filled > 0 ? (o.filled / (o.amount + o.filled)) * 100 : 0;
+
+    return (
+      <div
+        key={`${side}-${o.price}-${i}`}
+        className="relative grid grid-cols-3 text-xs py-1 px-3 hover:bg-secondary/20"
+      >
+        <div
+          className={`absolute inset-0 ${
+            side === "buy" ? "bg-green-500/20" : "bg-red-500/20"
+          }`}
+          style={{ width: `${percent}%` }}
+        />
+
+        <div
+          className={`absolute inset-0 ${
+            side === "buy" ? "bg-green-500/40" : "bg-red-500/40"
+          }`}
+          style={{ width: `${fillPercent}%` }}
+        />
+
+        <div
+          className={`relative font-mono ${
+            side === "buy" ? "text-green-500" : "text-red-500"
+          }`}
+        >
+          {o.price.toFixed(2)}
         </div>
-        
-        <div className="grid grid-cols-3 text-xs text-muted-foreground">
-          <div>Price (INR)</div>
-          <div className="text-right">Amount (SOL)</div>
-          <div className="text-right">Total (INR)</div>
+
+        <div className="relative text-right font-mono">
+          {o.amount.toFixed(3)}
+        </div>
+
+        <div className="relative text-right font-mono text-muted-foreground">
+          {o.total.toFixed(2)}
         </div>
       </div>
+    );
+  };
 
-      <div className="flex-1 overflow-hidden">
-        <div className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-border">
-          {(view === 'all' || view === 'sell') && asks.length > 0 && (
-            <div className="relative">
-              {asks.slice().reverse().map((ask, i) => (
-                <div key={i} className="relative grid grid-cols-3 text-xs py-1 px-3 hover:bg-secondary/20">
-                  <div
-                    className="absolute inset-0 bg-sell/10"
-                    style={{ width: `${(ask.total / maxTotal) * 100}%` }}
-                  />
-                  <div className="relative text-sell font-mono">{ask.price.toFixed(2)}</div>
-                  <div className="relative text-right font-mono">{ask.amount.toFixed(3)}</div>
-                  <div className="relative text-right font-mono text-muted-foreground">
-                    {ask.total.toFixed(2)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+  return (
+    <div className="flex flex-col border rounded-lg overflow-hidden bg-background">
+      <div className="grid grid-cols-3 text-xs font-semibold p-2 border-b">
+        <div className="text-left">Price</div>
+        <div className="text-right">Amount</div>
+        <div className="text-right">Total</div>
+      </div>
 
-          <div className="flex items-center justify-center py-2 border-y border-border bg-secondary/30">
-            <div className="text-lg font-mono font-bold flex items-center gap-2">
-              <span className="text-buy">₹0.00</span>
-            </div>
+      <div className="flex-1 overflow-y-auto max-h-64">
+        {asks.length > 0 ? (
+          [...asks].reverse().map((o, i) => renderRow(o, "sell", i))
+        ) : (
+          <div className="text-center text-xs text-muted-foreground p-2">
+            No asks
           </div>
+        )}
+      </div>
 
-          {(view === 'all' || view === 'buy') && bids.length > 0 && (
-            <div className="relative">
-              {bids.map((bid, i) => (
-                <div key={i} className="relative grid grid-cols-3 text-xs py-1 px-3 hover:bg-secondary/20">
-                  <div
-                    className="absolute inset-0 bg-buy/10"
-                    style={{ width: `${(bid.total / maxTotal) * 100}%` }}
-                  />
-                  <div className="relative text-buy font-mono">{bid.price.toFixed(2)}</div>
-                  <div className="relative text-right font-mono">{bid.amount.toFixed(3)}</div>
-                  <div className="relative text-right font-mono text-muted-foreground">
-                    {bid.total.toFixed(2)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+      <div className="text-left py-2 px-3 bg-secondary text-xl font-bold">
+        {Number(ticker.price).toFixed(2)}
+      </div>
 
-          {asks.length === 0 && bids.length === 0 && (
-            <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-              No orders available
-            </div>
-          )}
-        </div>
+      <div className="flex-1 overflow-y-auto max-h-64">
+        {bids.length > 0 ? (
+          bids.map((o, i) => renderRow(o, "buy", i))
+        ) : (
+          <div className="text-center text-xs text-muted-foreground p-2">
+            No bids
+          </div>
+        )}
       </div>
     </div>
   );
-};
-
-export default OrderBook;
+}

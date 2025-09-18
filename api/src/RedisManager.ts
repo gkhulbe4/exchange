@@ -48,8 +48,10 @@ export class RedisManager {
       this.subClient.subscribe("userBalance");
       this.subClient.on("message", (channel: string, message: string) => {
         // console.log(channel, message);
-        this.subClient.unsubscribe("userBalance");
-        resolve(JSON.parse(message));
+        if (channel == "userBalance") {
+          this.subClient.unsubscribe("userBalance");
+          resolve(JSON.parse(message));
+        }
       });
     });
   }
@@ -70,6 +72,20 @@ export class RedisManager {
     });
   }
 
+  public getOrders() {
+    return new Promise(async (resolve) => {
+      await this.pubClient.lpush("message", JSON.stringify({ type: "order" }));
+      this.subClient.subscribe("order");
+      this.subClient.on("message", (channel: string, message: string) => {
+        // console.log(channel, message);
+        if (channel == "order") {
+          this.subClient.unsubscribe("order");
+          resolve(JSON.parse(message));
+        }
+      });
+    });
+  }
+
   public getTickerData() {
     return new Promise(async (resolve) => {
       this.subClient.subscribe("ticker");
@@ -80,6 +96,38 @@ export class RedisManager {
       this.subClient.on("message", (channel: string, message: string) => {
         if (channel == "ticker") {
           this.subClient.unsubscribe("ticker");
+          resolve(JSON.parse(message));
+        }
+      });
+    });
+  }
+
+  public getKlineData(timeFrame: string) {
+    return new Promise(async (resolve) => {
+      this.subClient.subscribe("kline");
+      await this.pubClient.lpush(
+        "dbMessage",
+        JSON.stringify({ type: "kline", timeFrame: timeFrame })
+      );
+      this.subClient.on("message", (channel: string, message: string) => {
+        if (channel == "kline") {
+          this.subClient.unsubscribe("kline");
+          resolve(JSON.parse(message));
+        }
+      });
+    });
+  }
+
+  public getUserOrders(userId: string) {
+    return new Promise(async (resolve) => {
+      this.subClient.subscribe("userOrders");
+      await this.pubClient.lpush(
+        "message",
+        JSON.stringify({ type: "userOrders", userId: userId })
+      );
+      this.subClient.on("message", (channel: string, message: string) => {
+        if (channel == "userOrders") {
+          this.subClient.unsubscribe("userOrders");
           resolve(JSON.parse(message));
         }
       });

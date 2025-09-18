@@ -13,6 +13,11 @@ export type WebSocketContextType = {
   refetchUserBalance: () => void;
   trades: Trade[];
   ticker: Ticker;
+  // currentPrice: string;
+  userOrders:{
+    bids:  RawOrder[],
+    asks:RawOrder[]
+  }
 };
 
 export type Trade = {
@@ -27,4 +32,27 @@ export type Ticker = {
   max_price: string;
   min_price: string;
   volume: string;
+};
+
+export type Kline = {
+  bucket: string;
+  open: string;
+  close: string;
+  high: string;
+  low: string;
+  market: string;
+  volume: string;
+};
+
+
+export type RawOrder = {
+  orderId: string;
+  price: number;
+  quantity: number;
+  filled: number;
+  side: "buy" | "sell";
+  market: string;
+  baseAsset: string;
+  quoteAsset: string;
+  userId: string;
 };

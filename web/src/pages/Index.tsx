@@ -5,24 +5,31 @@ import RecentTrades from "@/components/RecentTrades";
 import OrderPanel from "@/components/OrderPanel";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useWebSocket } from "@/context/WebSocketContext";
+import UserOrders from "@/components/UserOrders";
 
 const Index = () => {
-  const { isConnected } = useWebSocket();
+  const { userId } = useWebSocket();
 
   return (
-    <div className="h-screen bg-background flex flex-col">
-      <div className={`h-1 ${isConnected ? "bg-buy" : "bg-sell"}`} />
+    <div className="h-full bg-background flex flex-col">
+      {/* Status bar */}
+      <div className={`h-1 ${userId ? "bg-buy" : "bg-sell"}`} />
 
+      {/* Price ticker */}
       <div className="p-2">
         <PriceTicker />
       </div>
 
-      <div className="flex flex-1 gap-2 p-2 overflow-hidden">
+      {/* Main content */}
+      <div className="flex flex-1 gap-2 p-2 overflow-hidden max-h-[500px]">
+        {/* Left side (Chart + OrderBook/Trades) */}
         <div className="flex-1 flex gap-2 overflow-hidden">
+          {/* Trading Chart */}
           <div className="flex-1 bg-card rounded-lg border border-border p-2 overflow-hidden">
             <TradingChart />
           </div>
 
+          {/* OrderBook / Trades Tabs */}
           <div className="w-80 bg-card rounded-lg border border-border flex flex-col overflow-hidden">
             <Tabs
               defaultValue="orderBook"
@@ -37,17 +44,18 @@ const Index = () => {
                 </TabsTrigger>
               </TabsList>
 
-              <div className="flex-1 flex flex-col overflow-hidden">
+              {/* Tabs body should fill available height */}
+              <div className="flex-1 overflow-hidden">
                 <TabsContent
                   value="orderBook"
-                  className="flex-1 overflow-y-auto p-2"
+                  className="h-full overflow-y-auto p-2"
                 >
                   <OrderBook />
                 </TabsContent>
 
                 <TabsContent
                   value="recentTrades"
-                  className="flex-1 overflow-y-auto p-2"
+                  className="h-full overflow-y-auto p-2"
                 >
                   <RecentTrades />
                 </TabsContent>
@@ -61,6 +69,10 @@ const Index = () => {
             <OrderPanel />
           </div>
         </div>
+      </div>
+
+      <div className="p-2 bg-card rounded-lg border border-border m-2 overflow-y-auto max-h-96">
+        <UserOrders />
       </div>
     </div>
   );
