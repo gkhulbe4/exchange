@@ -53,15 +53,15 @@ export default function OrderBook() {
             side === "buy" ? "text-green-500" : "text-red-500"
           }`}
         >
-          {o.price.toFixed(2)}
+          {o?.price?.toFixed(2) || 0}
         </div>
 
         <div className="relative text-right font-mono">
-          {o.amount.toFixed(3)}
+          {o?.amount?.toFixed(3) || 0}
         </div>
 
         <div className="relative text-right font-mono text-muted-foreground">
-          {o.total.toFixed(2)}
+          {o?.total?.toFixed(2) || 0}
         </div>
       </div>
     );

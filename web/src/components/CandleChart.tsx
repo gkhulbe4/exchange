@@ -34,7 +34,7 @@ function Chart({ chartData }: { chartData: Kline[] }) {
       width: chartContainerRef.current.clientWidth,
       height: chartContainerRef.current.clientHeight,
       layout: {
-        background: { type: ColorType.Solid, color: "#14151b" },
+        background: { type: ColorType.Solid, color: "#0d0d10" },
         textColor: "#fff",
       },
       grid: {
@@ -60,7 +60,6 @@ function Chart({ chartData }: { chartData: Kline[] }) {
       wickUpColor: "#009e64",
     });
 
-    // ✅ Handle responsive resize
     const handleResize = () => {
       if (chartContainerRef.current && chartRef.current) {
         chartRef.current.applyOptions({

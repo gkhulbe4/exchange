@@ -13,6 +13,7 @@ export async function initialiseViews() {
 
   await pool.query(`
     DROP TABLE IF EXISTS trades CASCADE;
+    DROP TABLE IF EXISTS orders CASCADE;
   `);
 
   // i should create an index on market
@@ -31,6 +32,22 @@ export async function initialiseViews() {
         );
         SELECT create_hypertable('trades', 'trade_time');
   `);
+
+  await pool.query(`
+    CREATE TABLE orders (
+    id            BIGSERIAL ,
+    user_id       BIGINT NOT NULL,
+    side          TEXT ,
+    price         NUMERIC(18,8) NOT NULL,
+    quantity      NUMERIC(18,8) NOT NULL,
+    filled        NUMERIC(18,8) DEFAULT 0,
+    market        VARCHAR(20) NOT NULL,
+    status        TEXT ,
+    order_time    TIMESTAMPTZ NOT NULL,
+    PRIMARY KEY   (id, order_time) 
+  );
+  SELECT create_hypertable('orders', 'order_time')
+    `);
 
   await pool.query(`CREATE MATERIALIZED VIEW klines_1m
     WITH (timescaledb.continuous) AS

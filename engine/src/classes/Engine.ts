@@ -1,4 +1,4 @@
-import { Fill, MessageFromApi, OrderDetails } from "../types";
+import { Fill, FinalOrder, MessageFromApi, OrderDetails } from "../types";
 import { Order, OrderBook } from "./OrderBook";
 import { RedisManager } from "./RedisManager";
 
@@ -27,23 +27,23 @@ export class Engine {
       SOL: { available: 500000, locked: 0 },
     });
     this.balances.set("2", {
-      INR: { available: 10000, locked: 0 },
+      INR: { available: 200000, locked: 0 },
       SOL: { available: 90000, locked: 0 },
     });
     this.balances.set("3", {
-      INR: { available: 100000, locked: 0 },
+      INR: { available: 300000, locked: 0 },
       SOL: { available: 50000, locked: 0 },
     });
     this.balances.set("4", {
-      INR: { available: 100000, locked: 0 },
+      INR: { available: 400000, locked: 0 },
       SOL: { available: 100000, locked: 0 },
     });
     this.balances.set("5", {
-      INR: { available: 100000, locked: 0 },
+      INR: { available: 500000, locked: 0 },
       SOL: { available: 100000, locked: 0 },
     });
     this.balances.set("6", {
-      INR: { available: 100000, locked: 0 },
+      INR: { available: 600000, locked: 0 },
       SOL: { available: 100000, locked: 0 },
     });
   }
@@ -51,7 +51,9 @@ export class Engine {
   getUserBalance(userId: string) {
     const userBalance = this.balances.get(userId);
     // console.log("user balance:", userBalance);
-    RedisManager.getInstance().sendUserBalance(JSON.stringify(userBalance));
+    RedisManager.getInstance().sendUserBalance(
+      JSON.stringify({ userBalance: userBalance, userId: userId })
+    );
   }
 
   checkBalanceAndLock(
@@ -171,6 +173,13 @@ export class Engine {
     });
   }
 
+  handleDbOrder(order: FinalOrder, fills: Fill[]) {
+    RedisManager.getInstance().sendDbCalls({
+      type: "ADD_ORDER",
+      data: { order: order, fills: fills },
+    });
+  }
+
   publishWsTrades(
     fills: Fill[],
     userId: string,
@@ -251,7 +260,7 @@ export class Engine {
       orderDetails.userId
     );
 
-    const order = {
+    const order: FinalOrder = {
       baseAsset: baseAsset as string,
       quoteAsset: quoteAsset as string,
       side: orderDetails.side,
@@ -261,6 +270,7 @@ export class Engine {
       orderId: `${Date.now()}${Math.floor(Math.random() * 1000)}`,
       filled: 0,
       market: orderDetails.market,
+      time: Date.now(),
     };
     console.log("order:", order);
 
@@ -290,6 +300,8 @@ export class Engine {
     // - get remaining order with all the details like filled , quantity , orderId, price and send to publishWs
     // - in frontend it will catch all the orders and show in the orderbook with colors
     // - also send order Id with the trade ws so that it can be checked in the frontend. If filled == quantity and remove the order from the array and show updated orders in the orderbook
+
+    this.handleDbOrder(order, fills);
 
     this.publishWsTrades(
       fills,

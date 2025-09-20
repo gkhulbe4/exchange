@@ -6,7 +6,6 @@ import { fetchTrades } from "@/lib/utils/fetchTrades";
 import { fetchUserBalance } from "@/lib/utils/fetchUserBalance";
 import { fetchUserOrder } from "@/lib/utils/fetchUserOrder";
 import { useQuery } from "@tanstack/react-query";
-import { CloudCog } from "lucide-react";
 import {
   createContext,
   useContext,
@@ -14,13 +13,14 @@ import {
   useState,
   ReactNode,
   useRef,
+  useCallback,
 } from "react";
 
 export type AggregatedOrder = {
   price: number;
-  amount: number; // open/unfilled quantity
-  filled: number; // cumulative filled at this level
-  total: number; // cumulative total (price*amount running sum)
+  amount: number;
+  filled: number;
+  total: number;
 };
 
 interface OrdersState {
@@ -32,6 +32,7 @@ const WebSocketContext = createContext<
   WebSocketContextType & {
     orders: OrdersState;
     setOrders: React.Dispatch<React.SetStateAction<OrdersState>>;
+    refreshBalance: () => Promise<void>;
   }
 >({
   socket: null,
@@ -45,10 +46,8 @@ const WebSocketContext = createContext<
   ticker: { max_price: null, min_price: null, price: null, volume: null },
   orders: { bids: [], asks: [] },
   setOrders: () => {},
-  userOrders: {
-    bids: [],
-    asks: [],
-  },
+  userOrders: { bids: [], asks: [] },
+  refreshBalance: async () => {},
 });
 
 export function useWebSocket() {
@@ -62,43 +61,38 @@ function aggregateOrders(
   const map = new Map<number, { amount: number; filled: number }>();
 
   rawOrders.forEach((o) => {
-    if (o.side !== side) return;
-    const remaining = o.quantity - o.filled;
-    if (remaining <= 0) return; // Skip fully filled orders
+    if (o.side !== side || o.quantity - o.filled <= 0) return;
 
-    if (!map.has(o.price)) {
-      map.set(o.price, { amount: 0, filled: 0 });
-    }
-    const prev = map.get(o.price)!;
+    const remaining = o.quantity - o.filled;
+    const current = map.get(o.price) || { amount: 0, filled: 0 };
     map.set(o.price, {
-      amount: prev.amount + remaining,
-      filled: prev.filled + o.filled,
+      amount: current.amount + remaining,
+      filled: current.filled + o.filled,
     });
   });
 
-  let levels = Array.from(map.entries()).map(([price, { amount, filled }]) => ({
-    price,
-    amount,
-    filled,
-    total: 0,
-  }));
+  const levels = Array.from(map.entries()).map(
+    ([price, { amount, filled }]) => ({
+      price,
+      amount,
+      filled,
+      total: 0,
+    })
+  );
 
-  // sort (buys: high→low, sells: low→high)
   levels.sort((a, b) =>
     side === "buy" ? b.price - a.price : a.price - b.price
   );
 
-  // running cumulative total (just amount for cumulative volume)
   let running = 0;
-  levels = levels.map((l) => {
+  return levels.map((l) => {
     running += l.amount;
     return { ...l, total: running };
   });
-
-  return levels;
 }
 
 function WebSocketProvider({ children }: { children: ReactNode }) {
+  // Core state
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
@@ -113,315 +107,66 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
   const [rawOrders, setRawOrders] = useState<RawOrder[]>([]);
   const [orders, setOrders] = useState<OrdersState>({ bids: [], asks: [] });
   const [userOrders, setUserOrders] = useState<{
-    bids: RawOrder[] | [];
-    asks: RawOrder[] | [];
-  }>({
-    bids: [],
-    asks: [],
-  });
+    bids: RawOrder[];
+    asks: RawOrder[];
+  }>({ bids: [], asks: [] });
+
+  // Refs for WebSocket callbacks
   const userOrdersRef = useRef(userOrders);
+  const userIdRef = useRef(userId);
 
-  // derive aggregated orders
+  // console.log("USER REF ID: ", userIdRef.current);
+
   useEffect(() => {
-    console.log("Raw orders updated:", rawOrders);
-    const newBids = aggregateOrders(rawOrders, "buy");
-    const newAsks = aggregateOrders(rawOrders, "sell");
-    console.log("Aggregated bids:", newBids);
-    console.log("Aggregated asks:", newAsks);
-    setOrders({
-      bids: newBids,
-      asks: newAsks,
-    });
-  }, [rawOrders]);
+    const storedId = localStorage.getItem("userId");
+    if (storedId && storedId.length > 0) {
+      setUserId(storedId);
+    }
+  }, []);
 
-  // user balance
+  // Update refs
+  useEffect(() => {
+    userOrdersRef.current = userOrders;
+  }, [userOrders]);
+  useEffect(() => {
+    userIdRef.current = userId;
+  }, [userId]);
+
+  // Balance management
   const balanceQuery = useQuery({
     queryKey: ["userBalance", userId],
     queryFn: () => fetchUserBalance(userId!),
     enabled: !!userId,
+    refetchOnWindowFocus: false,
   });
 
-  // initial data - fetch even without userId
-  useEffect(() => {
-    console.log("Fetching initial data...");
-    (async () => {
-      try {
-        const t = await fetchTrades();
-        console.log("Initial trades:", t);
-        if (t?.response) setTrades(t.response);
-      } catch (error) {
-        console.error("Error fetching trades:", error);
-      }
-    })();
+  const refreshBalance = useCallback(async () => {
+    // console.log("USER ID: ", userId);
+    if (!userIdRef.current) return;
 
-    (async () => {
-      try {
-        const d = await fetchTickerData();
-        console.log("Initial ticker data:", d);
-        if (d?.response) {
-          setTicker({
-            max_price: d.response.max_price,
-            min_price: d.response.min_price,
-            volume: d.response.volume,
-            price: d.response.last_trade_price,
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching ticker:", error);
-      }
-    })();
+    try {
+      await queryClient.invalidateQueries({
+        queryKey: ["userBalance", userIdRef.current],
+      });
+      const data = await queryClient.fetchQuery({
+        queryKey: ["userBalance", userIdRef.current],
+        queryFn: () => fetchUserBalance(userIdRef.current),
+      });
 
-    (async () => {
-      try {
-        const o = await fetchOrders();
-        console.log("Initial orders from DB:", o);
-
-        // Handle both formats: flat array or grouped by buys/asks
-        if (o?.response && Array.isArray(o.response)) {
-          setRawOrders(o.response);
-        } else if (o?.buys || o?.asks) {
-          // Combine buys and asks into a single array
-          const allOrders: RawOrder[] = [];
-
-          // Add buy orders
-          if (o.buys && Array.isArray(o.buys)) {
-            console.log(o.buys);
-            o.buys.forEach((order: RawOrder) => {
-              allOrders.push({
-                ...order,
-                side: order.side || "buy",
-              });
-            });
-          }
-
-          // Add sell orders (asks)
-          if (o.asks && Array.isArray(o.asks)) {
-            o.asks.forEach((order: RawOrder) => {
-              allOrders.push({
-                ...order,
-                side: order.side || "sell",
-              });
-            });
-          }
-
-          console.log("Processed orders:", allOrders);
-          setRawOrders(allOrders);
-        }
-      } catch (error) {
-        console.error("Error fetching orders:", error);
-      }
-    })();
-
-    (async () => {
-      try {
-        if (!userId) return;
-        const data = await fetchUserOrder(userId);
-        console.log("User all orders", data);
-      } catch (error) {
-        console.error("Error fetching user orders:", error);
-      }
-    })();
-  }, []);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        if (!userId) return;
-        const data = await fetchUserOrder(userId);
-        console.log("User all orders", data);
-        setUserOrders({
-          bids: data?.response?.buys ?? [],
-          asks: data?.response?.asks ?? [],
+      if (data) {
+        setUserBalance({
+          INR: data.INR?.available || 0,
+          SOL: data.SOL?.available || 0,
         });
-      } catch (error) {
-        console.error("Error fetching user orders:", error);
       }
-    })();
+    } catch (error) {
+      console.error("Balance refresh failed:", error);
+    }
   }, [userId]);
 
+  // Sync balance from React Query
   useEffect(() => {
-    userOrdersRef.current = userOrders;
-    console.log("UserOrders updated:", userOrders); // This should show your data
-  }, [userOrders]);
-
-  // websocket - connect even without userId for public data
-  useEffect(() => {
-    const ws = new WebSocket(
-      userId ? `ws://localhost:8080?userId=${userId}` : `ws://localhost:8080`
-    );
-
-    ws.onopen = () => {
-      console.log("WebSocket connected");
-      setSocket(ws);
-      setIsConnected(true);
-      // Subscribe to public streams
-      ws.send(JSON.stringify({ type: "SUBSCRIBE", subType: "trades" }));
-      ws.send(JSON.stringify({ type: "SUBSCRIBE", subType: "order" }));
-    };
-
-    ws.onmessage = (raw) => {
-      const message = JSON.parse(raw.data as string);
-      console.log("WebSocket message received:", message);
-
-      if (message.stream === "trade") {
-        const t = message.data;
-        const newTrade: Trade = {
-          price: t.p,
-          quantity: t.q,
-          side: t.s,
-          trade_time: new Date(t.T).toISOString(),
-        };
-
-        // prepend trade
-        setTrades((prev) => [newTrade, ...prev].slice(0, 50));
-
-        // update ticker
-        setTicker((prev) => ({
-          ...prev,
-          max_price:
-            prev.max_price === null || t.p > prev.max_price
-              ? t.p
-              : prev.max_price,
-          min_price:
-            prev.min_price === null || t.p < prev.min_price
-              ? t.p
-              : prev.min_price,
-          price: t.p,
-        }));
-
-        const sideKey = t.s === "buy" ? "asks" : "bids";
-
-        const userCurrentOrders = userOrdersRef.current;
-        const userSideOrders = [...userCurrentOrders[sideKey]];
-        const orderIndex = userSideOrders.findIndex(
-          (order) => order.orderId === t.of
-        );
-
-        // console.log(
-        //   `USER SIDE ORDERS: ${userSideOrders}, ORDER ID GOT FROM TRADE: ${t.of}`
-        // );
-
-        if (orderIndex !== -1) {
-          const particularOrder = { ...userSideOrders[orderIndex] };
-          particularOrder.filled += t.q;
-
-          if (particularOrder.filled >= particularOrder.quantity) {
-            userSideOrders.splice(orderIndex, 1);
-          } else {
-            userSideOrders[orderIndex] = particularOrder;
-          }
-
-          const updatedOrders = {
-            ...userCurrentOrders,
-            [sideKey]: userSideOrders,
-          };
-
-          setUserOrders(updatedOrders);
-          userOrdersRef.current = updatedOrders;
-        }
-
-        setRawOrders((prev) => {
-          return prev
-            .map((o) => {
-              if (o.orderId === t.of) {
-                const newFilled = o.filled + t.q;
-                return {
-                  ...o,
-                  filled: newFilled > o.quantity ? o.quantity : newFilled,
-                };
-              }
-              return o;
-            })
-            .filter((o) => o.filled < o.quantity);
-        });
-      }
-
-      if (message.stream === "order") {
-        const orderData = message.data;
-        console.log("Order update received:", orderData);
-
-        // If format is { e: "order", f: filled, m: market, o: orderId, p: price, q: quantity, s: side }
-        let order: RawOrder;
-
-        if (orderData.e === "order") {
-          // Transform WebSocket format to RawOrder format
-          order = {
-            orderId: orderData.o,
-            price: orderData.p,
-            quantity: orderData.q,
-            filled: orderData.f,
-            side: orderData.s,
-            market: orderData.m,
-            baseAsset: orderData.baseAsset || "SOL",
-            quoteAsset: orderData.quoteAsset || "INR",
-            userId: orderData.u || "",
-          };
-        } else {
-          // Already in RawOrder format
-          order = orderData as RawOrder;
-        }
-
-        // console.log(
-        //   `ORDER USER ID: ${order.userId} , CURRENT USER ID: ${userId}`
-        // );
-        if (order.userId === userId) {
-          const userCurrentOrders = userOrdersRef.current;
-
-          const sideKey = order.side === "sell" ? "asks" : "bids";
-
-          const updatedUserSideOrders = [...userCurrentOrders[sideKey], order];
-
-          const updatedOrders = {
-            ...userCurrentOrders,
-            [sideKey]: updatedUserSideOrders,
-          };
-
-          setUserOrders(updatedOrders);
-          userOrdersRef.current = updatedOrders;
-        }
-
-        setRawOrders((prev) => {
-          // Check if order is fully filled
-          if (order.filled >= order.quantity) {
-            // Remove the order if fully filled
-            return prev.filter((o) => o.orderId !== order.orderId);
-          }
-
-          // Update or add the order
-          const existingIndex = prev.findIndex(
-            (o) => o.orderId === order.orderId
-          );
-          if (existingIndex !== -1) {
-            // Update existing order
-            const updated = [...prev];
-            updated[existingIndex] = order;
-            return updated;
-          } else {
-            // Add new order
-            return [...prev, order];
-          }
-        });
-      }
-    };
-
-    ws.onerror = (error) => {
-      console.error("WebSocket error:", error);
-    };
-
-    ws.onclose = () => {
-      console.log("WebSocket disconnected");
-      setSocket(null);
-      setIsConnected(false);
-    };
-
-    return () => {
-      console.log("Cleaning up WebSocket");
-      ws.close();
-    };
-  }, [userId]); // Reconnect when userId changes
-
-  // sync balance
-  useEffect(() => {
+    console.log("USER BALANCE: ", balanceQuery.data);
     if (balanceQuery.data) {
       setUserBalance({
         INR: balanceQuery.data.INR?.available || 0,
@@ -430,13 +175,233 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
     }
   }, [balanceQuery.data]);
 
-  async function refetchUserBalance() {
-    if (userId) {
-      await queryClient.invalidateQueries({
-        queryKey: ["userBalance", userId],
-      });
+  // Aggregate orders when raw orders change
+  useEffect(() => {
+    setOrders({
+      bids: aggregateOrders(rawOrders, "buy"),
+      asks: aggregateOrders(rawOrders, "sell"),
+    });
+  }, [rawOrders]);
+
+  // Load initial data once
+  useEffect(() => {
+    async function loadData() {
+      try {
+        console.log("i am in loadData");
+        const [tradesData, tickerData, ordersData] = await Promise.all([
+          fetchTrades(),
+          fetchTickerData(),
+          fetchOrders(),
+        ]);
+
+        console.log("TRADES: ", tradesData);
+        console.log("TICKER: ", tickerData);
+        console.log("TRADES: ", tradesData.response);
+        if (tradesData?.response) setTrades(tradesData.response);
+
+        if (tickerData?.response) {
+          setTicker({
+            max_price: tickerData.response.max_price,
+            min_price: tickerData.response.min_price,
+            volume: tickerData.response.volume,
+            price: tickerData.response.last_trade_price,
+          });
+        }
+
+        // Handle orders data
+        if (ordersData?.response && Array.isArray(ordersData.response)) {
+          setRawOrders(ordersData.response);
+        } else if (ordersData?.buys || ordersData?.asks) {
+          const allOrders: RawOrder[] = [];
+
+          ordersData.buys?.forEach((order: RawOrder) => {
+            allOrders.push({ ...order, side: order.side || "buy" });
+          });
+
+          ordersData.asks?.forEach((order: RawOrder) => {
+            allOrders.push({ ...order, side: order.side || "sell" });
+          });
+
+          setRawOrders(allOrders);
+        }
+      } catch (error) {
+        console.error("Failed to load initial data:", error);
+      }
     }
-  }
+
+    loadData();
+  }, []);
+
+  // Load user orders when userId changes
+  useEffect(() => {
+    if (!userId) {
+      setUserOrders({ bids: [], asks: [] });
+      return;
+    }
+
+    fetchUserOrder(userId)
+      .then((data) => {
+        setUserOrders({
+          bids: data?.response?.buys ?? [],
+          asks: data?.response?.asks ?? [],
+        });
+      })
+      .catch((error) => {
+        console.error("Failed to load user orders:", error);
+        setUserOrders({ bids: [], asks: [] });
+      });
+  }, [userId]);
+
+  // WebSocket connection
+  useEffect(() => {
+    const wsUrl = userId
+      ? `ws://localhost:8080?userId=${userId}`
+      : `ws://localhost:8080`;
+    const ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+      setSocket(ws);
+      setIsConnected(true);
+      ws.send(JSON.stringify({ type: "SUBSCRIBE", subType: "trades" }));
+      ws.send(JSON.stringify({ type: "SUBSCRIBE", subType: "order" }));
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data);
+
+        if (message.stream === "trade") {
+          const t = message.data;
+
+          // Add new trade
+          const newTrade: Trade = {
+            price: t.p,
+            quantity: t.q,
+            side: t.s,
+            trade_time: new Date(t.T).toISOString(),
+          };
+          setTrades((prev) => [newTrade, ...prev].slice(0, 50));
+
+          // Update ticker
+          setTicker((prev) => ({
+            ...prev,
+            max_price:
+              prev.max_price === null || t.p > prev.max_price
+                ? t.p
+                : prev.max_price,
+            min_price:
+              prev.min_price === null || t.p < prev.min_price
+                ? t.p
+                : prev.min_price,
+            price: t.p,
+          }));
+
+          // Update user orders if user was involved
+          const currentUserOrders = userOrdersRef.current;
+          const sideKey = t.s === "buy" ? "asks" : "bids";
+          const orderIndex = currentUserOrders[sideKey].findIndex(
+            (order) => order.orderId === t.of
+          );
+
+          if (orderIndex !== -1) {
+            const updatedOrders = { ...currentUserOrders };
+            const updatedSideOrders = [...updatedOrders[sideKey]];
+            const order = { ...updatedSideOrders[orderIndex] };
+
+            order.filled += t.q;
+
+            if (order.filled >= order.quantity) {
+              updatedSideOrders.splice(orderIndex, 1);
+            } else {
+              updatedSideOrders[orderIndex] = order;
+            }
+
+            updatedOrders[sideKey] = updatedSideOrders;
+            setUserOrders(updatedOrders);
+            userOrdersRef.current = updatedOrders;
+
+            // Refresh balance after user trade
+            setTimeout(() => refreshBalance(), 100);
+          }
+
+          // Update raw orders (order book)
+          setRawOrders((prev) =>
+            prev
+              .map((o) => {
+                if (o.orderId === t.of) {
+                  const newFilled = Math.min(o.filled + t.q, o.quantity);
+                  return { ...o, filled: newFilled };
+                }
+                return o;
+              })
+              .filter((o) => o.filled < o.quantity)
+          );
+        } else if (message.stream === "order") {
+          const orderData = message.data;
+
+          const order: RawOrder =
+            orderData.e === "order"
+              ? {
+                  orderId: orderData.o,
+                  price: orderData.p,
+                  quantity: orderData.q,
+                  filled: orderData.f,
+                  side: orderData.s,
+                  market: orderData.m,
+                  baseAsset: orderData.baseAsset || "SOL",
+                  quoteAsset: orderData.quoteAsset || "INR",
+                  userId: orderData.u || "",
+                }
+              : orderData;
+
+          // Update user orders if this belongs to current user
+          if (order.userId === userIdRef.current) {
+            const currentUserOrders = userOrdersRef.current;
+            const sideKey = order.side === "sell" ? "asks" : "bids";
+            const updatedOrders = {
+              ...currentUserOrders,
+              [sideKey]: [...currentUserOrders[sideKey], order],
+            };
+
+            setUserOrders(updatedOrders);
+            userOrdersRef.current = updatedOrders;
+
+            // Refresh balance after new order
+            setTimeout(() => refreshBalance(), 100);
+          }
+
+          // Update raw orders
+          setRawOrders((prev) => {
+            if (order.filled >= order.quantity) {
+              return prev.filter((o) => o.orderId !== order.orderId);
+            }
+
+            const existingIndex = prev.findIndex(
+              (o) => o.orderId === order.orderId
+            );
+
+            if (existingIndex !== -1) {
+              const updated = [...prev];
+              updated[existingIndex] = order;
+              return updated;
+            }
+
+            return [...prev, order];
+          });
+        }
+      } catch (error) {
+        console.error("WebSocket message error:", error);
+      }
+    };
+
+    ws.onerror = (error) => console.error("WebSocket error:", error);
+    ws.onclose = () => {
+      setSocket(null);
+      setIsConnected(false);
+    };
+
+    return () => ws.close();
+  }, [userId, refreshBalance]);
 
   return (
     <WebSocketContext.Provider
@@ -447,7 +412,8 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
         setUserId,
         userBalance,
         setUserBalance,
-        refetchUserBalance,
+        refetchUserBalance: refreshBalance,
+        refreshBalance,
         trades,
         ticker,
         orders,

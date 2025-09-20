@@ -9,13 +9,12 @@ async function startEngine() {
     const engine = new Engine_1.Engine();
     const redisClient = new ioredis_1.default();
     while (true) {
-        const response = await redisClient.rpop("message");
-        const data = JSON.parse(response);
-        if (!response) {
-        }
-        else {
-            // console.log(response, "in startEngine");
-            // console.log(data);
+        const response = await redisClient.brpop("message", "user", 0);
+        if (!response)
+            continue;
+        const [queue, rawData] = response;
+        const data = JSON.parse(rawData);
+        if (queue === "message") {
             if (data.type == "userBalance") {
                 engine.getUserBalance(data.userId);
             }
@@ -27,7 +26,12 @@ async function startEngine() {
             }
             else {
                 engine.process(data.clientId, data.message);
-                //client id for communicating to that order
+            }
+        }
+        else if (queue === "user") {
+            if (data.type === "userBalance") {
+                console.log("IN USER QUEUE , USER ID: ", data.userId);
+                engine.getUserBalance(data.userId);
             }
         }
     }

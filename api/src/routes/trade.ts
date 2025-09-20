@@ -17,6 +17,7 @@ tradeRouter.get("/getTrades", async (req: Request, res: Response) => {
 
 tradeRouter.get("/getTickerData", async (req: Request, res: Response) => {
   try {
+    // console.log("calling ticker data");
     const response = await RedisManager.getInstance().getTickerData();
     res.status(200).json({
       message: "Ticker data fetched successfully",

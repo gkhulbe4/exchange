@@ -30,8 +30,8 @@ class OrderBook {
     addOrder(order) {
         let remainingOrder = null;
         const { executedQuantity, fills } = order.side === "buy"
-            ? this.matchBid(order.price, order.quantity)
-            : this.matchAsk(order.price, order.quantity);
+            ? this.matchBid(order.price, order.quantity, order.userId)
+            : this.matchAsk(order.price, order.quantity, order.userId);
         order.filled = executedQuantity;
         if (executedQuantity < order.quantity) {
             remainingOrder = { ...order }; // not fully executed
@@ -50,7 +50,7 @@ class OrderBook {
         }
         return { executedQuantity, fills, remainingOrder };
     }
-    matchBid(price, quantity) {
+    matchBid(price, quantity, userId) {
         let executedQuantity = 0;
         let fills = [];
         console.log("in match bid");
@@ -61,8 +61,9 @@ class OrderBook {
             // console.log("Remaining: ", remainingAsk);
             // console.log("Bid Quantity: ", quantity);
             if (ask.price <= price &&
-                executedQuantity <= quantity &&
-                remainingAsk > 0) {
+                executedQuantity < quantity &&
+                remainingAsk > 0 &&
+                ask.userId !== userId) {
                 const filled = Math.min(quantity - executedQuantity, remainingAsk);
                 executedQuantity += filled;
                 ask.filled += filled;
@@ -81,14 +82,15 @@ class OrderBook {
         this.asks = this.asks.filter((ask) => ask.filled < ask.quantity);
         return { fills, executedQuantity };
     }
-    matchAsk(price, quantity) {
+    matchAsk(price, quantity, userId) {
         let executedQuantity = 0;
         let fills = [];
         for (const bid of this.bids) {
             const remainingBid = bid.quantity - bid.filled;
             if (bid.price >= price &&
                 executedQuantity < quantity &&
-                remainingBid > 0) {
+                remainingBid > 0 &&
+                bid.userId !== userId) {
                 const filled = Math.min(quantity - executedQuantity, remainingBid);
                 executedQuantity += filled;
                 bid.filled += filled;

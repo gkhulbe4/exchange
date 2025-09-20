@@ -4,10 +4,18 @@ import { Button } from "./ui/button";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { SiSolana } from "react-icons/si";
+import { LuDollarSign } from "react-icons/lu";
 
 const PriceTicker = () => {
-  const { setUserId, refetchUserBalance, ticker, userId, setUserBalance } =
-    useWebSocket();
+  const {
+    setUserId,
+    refetchUserBalance,
+    ticker,
+    userId,
+    setUserBalance,
+    userBalance,
+  } = useWebSocket();
   const [userIdEntered, setUserIdEntered] = useState("");
 
   async function signIn() {
@@ -15,8 +23,10 @@ const PriceTicker = () => {
       toast.info("Please enter the user Id");
       return;
     }
-    setUserId(userIdEntered);
+    console.log("USER ID ENTERED: ", userIdEntered);
+    setUserId(() => userIdEntered);
     refetchUserBalance();
+    localStorage.setItem("userId", userIdEntered);
     toast.success("User signed in successfully");
   }
 
@@ -26,6 +36,7 @@ const PriceTicker = () => {
       INR: null,
       SOL: null,
     });
+    localStorage.removeItem("userId");
     toast.success("User signed out successfully");
   }
 
@@ -43,7 +54,7 @@ const PriceTicker = () => {
             </div>
 
             <div>
-              <div className="font-semibold text-sm">SOL/INR</div>
+              <div className="font-semibold text-sm">SOL/USD</div>
               <div className="text-xs text-muted-foreground">Solana</div>
             </div>
           </div>
@@ -77,7 +88,7 @@ const PriceTicker = () => {
             </div>
             <div>
               <div className="text-muted-foreground text-xs">
-                24h Volume(INR)
+                24h Volume(USD)
               </div>
               <div className="font-mono">
                 {" "}
@@ -102,6 +113,23 @@ const PriceTicker = () => {
               }
             }}
           />
+        )}
+        {userId && (
+          <>
+            <div className="flex justify-center gap-5 items-center border border-input px-3 py-2 rounded-md bg-[#070707]">
+              <p className="text-sm text-muted-foreground font-extralight flex justify-center items-center gap-2">
+                <LuDollarSign size={18} /> {userBalance?.INR?.toLocaleString()}
+              </p>
+              <p className="text-sm text-muted-foreground font-extralight flex justify-center items-center gap-2">
+                <SiSolana /> {userBalance?.SOL?.toLocaleString()}
+              </p>
+            </div>
+            <div className="flex justify-center items-center border border-input px-3 py-2 rounded-md bg-[#070707]">
+              <p className="text-sm text-muted-foreground font-extralight">
+                USER ID: {userId}
+              </p>
+            </div>
+          </>
         )}
         <Button
           onClick={() => {

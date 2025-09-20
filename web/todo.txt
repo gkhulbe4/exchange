@@ -1,12 +1,16 @@
-- update balance as the order gets filled
+- update balance as the order gets filled // kind of done 
 
-- remaining amount
-
-- restrict self fill
-
-- margin is too much in mm orders
+- margin is too much in mm orders // kinda fixed 
 
 - cancel orders
+
+- add orders in db and also update them // done
+
+- make a users order page where he can see all his orders. User should be able to filter them
+
+- Add 2 more markets
+
+- Make a landing page where all markets can be seen
 
 - add new candle in real time 
 

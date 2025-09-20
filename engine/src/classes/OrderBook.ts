@@ -52,8 +52,8 @@ export class OrderBook {
 
     const { executedQuantity, fills } =
       order.side === "buy"
-        ? this.matchBid(order.price, order.quantity)
-        : this.matchAsk(order.price, order.quantity);
+        ? this.matchBid(order.price, order.quantity, order.userId)
+        : this.matchAsk(order.price, order.quantity, order.userId);
 
     order.filled = executedQuantity;
 
@@ -74,7 +74,7 @@ export class OrderBook {
     return { executedQuantity, fills, remainingOrder };
   }
 
-  matchBid(price: number, quantity: number) {
+  matchBid(price: number, quantity: number, userId: string) {
     let executedQuantity = 0;
     let fills: Fill[] = [];
     console.log("in match bid");
@@ -89,8 +89,9 @@ export class OrderBook {
 
       if (
         ask.price <= price &&
-        executedQuantity <= quantity &&
-        remainingAsk > 0
+        executedQuantity < quantity &&
+        remainingAsk > 0 &&
+        ask.userId !== userId
       ) {
         const filled = Math.min(quantity - executedQuantity, remainingAsk);
         executedQuantity += filled;
@@ -115,7 +116,7 @@ export class OrderBook {
     return { fills, executedQuantity };
   }
 
-  matchAsk(price: number, quantity: number) {
+  matchAsk(price: number, quantity: number, userId: string) {
     let executedQuantity = 0;
     let fills: Fill[] = [];
 
@@ -124,7 +125,8 @@ export class OrderBook {
       if (
         bid.price >= price &&
         executedQuantity < quantity &&
-        remainingBid > 0
+        remainingBid > 0 &&
+        bid.userId !== userId
       ) {
         const filled = Math.min(quantity - executedQuantity, remainingBid);
         executedQuantity += filled;

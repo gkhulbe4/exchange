@@ -5,6 +5,7 @@ import { getTradesFromDb } from "./lib/getTradesFromDb";
 import { addTradeInDb } from "./lib/addTradeInDb";
 import { getTickerDataFromDb } from "./lib/getTickerDatafromDb";
 import { getKlineDataFromDb } from "./lib/getKlineDataFromDb";
+import { handleOrderInDb } from "./lib/handleOrderInDb";
 
 export async function main() {
   await initialiseViews();
@@ -26,6 +27,9 @@ export async function main() {
           message.data.price,
           message.data.qty
         );
+      } else if ((message.type = "ADD_ORDER")) {
+        console.log(message);
+        await handleOrderInDb(message.data.order, message.data.fills);
       } else if (message.type == "trades") {
         const data = await getTradesFromDb();
         redisClient.publish("trades", JSON.stringify(data));

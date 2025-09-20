@@ -10,6 +10,7 @@ const getTradesFromDb_1 = require("./lib/getTradesFromDb");
 const addTradeInDb_1 = require("./lib/addTradeInDb");
 const getTickerDatafromDb_1 = require("./lib/getTickerDatafromDb");
 const getKlineDataFromDb_1 = require("./lib/getKlineDataFromDb");
+const handleOrderInDb_1 = require("./lib/handleOrderInDb");
 async function main() {
     await (0, initialiseViews_1.initialiseViews)();
     const redisClient = new ioredis_1.default();
@@ -21,6 +22,10 @@ async function main() {
             // console.log("Message in DB:", message);
             if (message.type == "ADD_TRADE") {
                 await (0, addTradeInDb_1.addTradeInDb)(message.data.id, message.data.market, message.data.buyer_id, message.data.seller_id, message.data.side, message.data.price, message.data.qty);
+            }
+            else if ((message.type = "ADD_ORDER")) {
+                console.log(message);
+                await (0, handleOrderInDb_1.handleOrderInDb)(message.data.order, message.data.fills);
             }
             else if (message.type == "trades") {
                 const data = await (0, getTradesFromDb_1.getTradesFromDb)();

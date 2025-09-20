@@ -42,14 +42,16 @@ export class RedisManager {
     // console.log("pushing to userBalance");
     return new Promise(async (resolve) => {
       await this.pubClient.lpush(
-        "message",
+        "user",
         JSON.stringify({ type: "userBalance", userId: userId })
       );
-      this.subClient.subscribe("userBalance");
+      console.log(`Subscribing to userBalance:${userId}`);
+      this.subClient.subscribe(`userBalance:${userId}`);
       this.subClient.on("message", (channel: string, message: string) => {
         // console.log(channel, message);
-        if (channel == "userBalance") {
-          this.subClient.unsubscribe("userBalance");
+        if (channel == `userBalance:${userId}`) {
+          this.subClient.unsubscribe(`userBalance:${userId}`);
+          console.log(message);
           resolve(JSON.parse(message));
         }
       });

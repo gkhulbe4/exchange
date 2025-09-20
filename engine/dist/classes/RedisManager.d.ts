@@ -9,7 +9,7 @@ export declare class RedisManager {
     sendDbCalls(message: DBMessage): Promise<void>;
     publishToWs(channel: string, data: PublishToWS): Promise<void>;
     sendToApi(clientId: string, message: DBMessage): Promise<void>;
-    sendUserBalance(userBalance: string): Promise<void>;
+    sendUserBalance(userBalanceData: string): Promise<void>;
     sendOrders(order: string): Promise<void>;
     sendUserOrders(orders: string): Promise<void>;
 }

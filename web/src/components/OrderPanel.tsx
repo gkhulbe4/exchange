@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Info } from "lucide-react";
+import { ArrowRightLeft, Info } from "lucide-react";
 import { useWebSocket } from "@/context/WebSocketContext";
 import { toast } from "sonner";
 import axios from "axios";
 import { orderSchema } from "@/lib/schema";
 
 const OrderPanel = () => {
-  const { socket, userBalance, userId, refetchUserBalance } = useWebSocket();
+  const { socket, userBalance, userId, refetchUserBalance, ticker } =
+    useWebSocket();
   const [orderType, setOrderType] = useState<"limit" | "market">("limit");
   const [side, setSide] = useState<"buy" | "sell">("buy");
   const [price, setPrice] = useState("");
@@ -16,8 +17,9 @@ const OrderPanel = () => {
   const [errors, setErrors] = useState<{ price?: string; quantity?: string }>(
     {}
   );
+  const [toggleQuantity, setToggleQuantity] = useState(false);
 
-  async function handleOrder() {
+  async function handleLimitOrder() {
     if (!socket && !userId) return;
 
     const validation = orderSchema.safeParse({ price, quantity });
@@ -32,7 +34,7 @@ const OrderPanel = () => {
     }
 
     const total =
-      side == "buy"
+      side === "buy"
         ? Number(price) * Number(quantity) +
           (Number(price) * Number(quantity) * 1) / 1000
         : Number(quantity) + (Number(price) * Number(quantity) * 1) / 1000;
@@ -52,14 +54,62 @@ const OrderPanel = () => {
         quantity: Number(quantity),
         side: side,
         userId: userId.toString(),
+        type: "limit",
       });
-      const data = res.data;
-      console.log("Order Placed", data);
+      console.log("Limit Order Placed", res.data);
       refetchUserBalance();
-      toast.success("Order Placed Successfully");
+      toast.success("Limit Order Placed Successfully");
+      setPrice("");
+      setQuantity("");
     } catch (error) {
-      console.log("Error while placing order", error);
-      toast.error("Error while placing order");
+      console.log("Error while placing limit order", error);
+      toast.error("Error while placing limit order");
+    }
+  }
+
+  async function handleMarketOrder() {
+    if (!socket && !userId) return;
+
+    let solQuantity = 0;
+
+    if (toggleQuantity) {
+      solQuantity = Number(quantity);
+    } else {
+      solQuantity = Number(quantity) / Number(ticker.price);
+    }
+
+    if (solQuantity <= 0) {
+      toast.error("Invalid order amount");
+      return;
+    }
+
+    const balance =
+      side === "buy" ? userBalance.INR ?? 0 : userBalance.SOL ?? 0;
+
+    const total =
+      side === "buy" ? solQuantity * Number(ticker.price) : solQuantity;
+
+    if (total > balance) {
+      toast.error("Not enough balance");
+      return;
+    }
+
+    try {
+      const res = await axios.post("http://localhost:3001/api/v1/order", {
+        market: "SOL_INR",
+        price: Number(ticker.price),
+        quantity: solQuantity,
+        side: side,
+        userId: userId.toString(),
+        type: "market",
+      });
+      console.log("Market Order Placed", res.data);
+      refetchUserBalance();
+      toast.success("Market Order Placed Successfully");
+      setQuantity("");
+    } catch (error) {
+      console.log("Error while placing market order", error);
+      toast.error("Error while placing market order");
     }
   }
 
@@ -72,6 +122,18 @@ const OrderPanel = () => {
         </span>
       </div>
     );
+
+  const priceValue =
+    orderType === "limit" ? Number(price) : Number(ticker.price);
+  const solValue =
+    orderType === "market"
+      ? toggleQuantity
+        ? Number(quantity)
+        : Number(quantity) / Number(ticker.price)
+      : Number(quantity);
+
+  const totalValue = priceValue * solValue;
+  const fee = (totalValue * 1) / 1000;
 
   return (
     <div className="h-full bg-card rounded-lg border border-border">
@@ -103,7 +165,7 @@ const OrderPanel = () => {
           <Button
             variant="outline"
             size="sm"
-            className={`flex-1 ${orderType === "limit" ? "bg-secondary" : ""}`}
+            className={`flex-1 ${orderType === "limit" ? "" : "bg-secondary"}`}
             onClick={() => setOrderType("limit")}
           >
             Limit
@@ -111,7 +173,7 @@ const OrderPanel = () => {
           <Button
             variant="outline"
             size="sm"
-            className={`flex-1 ${orderType === "market" ? "bg-secondary" : ""}`}
+            className={`flex-1 ${orderType === "market" ? "" : "bg-secondary"}`}
             onClick={() => setOrderType("market")}
           >
             Market
@@ -123,7 +185,7 @@ const OrderPanel = () => {
             <span>Available</span>
             <span className="font-mono">
               {side === "buy"
-                ? `₹ ${userBalance.INR ? userBalance.INR.toLocaleString() : 0}`
+                ? `$${userBalance.INR ? userBalance.INR.toLocaleString() : 0}`
                 : `${
                     userBalance.SOL ? userBalance.SOL.toLocaleString() : 0
                   } SOL`}
@@ -144,7 +206,7 @@ const OrderPanel = () => {
                   placeholder="0.00"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                  INR
+                  USD
                 </span>
                 {errors.price && (
                   <p className="text-xs text-red-500 mt-1">{errors.price}</p>
@@ -153,46 +215,79 @@ const OrderPanel = () => {
             </div>
           )}
 
-          <div>
-            <label className="text-xs text-muted-foreground mb-1 block">
-              Quantity
-            </label>
-            <div className="relative">
-              <Input
-                type="text"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                className="bg-secondary border-border font-mono pr-12"
-                placeholder="0.00"
-              />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                SOL
-              </span>
-              {errors.quantity && (
-                <p className="text-xs text-red-500 mt-1">{errors.quantity}</p>
-              )}
+          {orderType === "market" ? (
+            <div>
+              <label className="flex justify-between text-xs text-muted-foreground mb-1 ">
+                <p
+                  onClick={() => setToggleQuantity((prev) => !prev)}
+                  className="flex gap-1 items-center cursor-pointer hover:text-gray-500 transition-all ease-in-out duration-200"
+                >
+                  {toggleQuantity ? "Quantity" : "Order Value"}{" "}
+                  <ArrowRightLeft size={14} />
+                </p>
+                <span className="font-mono">
+                  {toggleQuantity
+                    ? `≈ $${(
+                        Number(quantity) * Number(ticker.price)
+                      ).toLocaleString()}`
+                    : `≈ ${(Number(quantity) / Number(ticker.price)).toFixed(
+                        4
+                      )} SOL`}
+                </span>
+              </label>
+              <div className="relative">
+                <Input
+                  type="text"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                  className="bg-secondary border-border font-mono pr-12"
+                  placeholder="0.00"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                  {toggleQuantity ? "SOL" : "USD"}
+                </span>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div>
+              <label className="flex justify-between text-xs text-muted-foreground mb-1 ">
+                Quantity
+              </label>
+              <div className="relative">
+                <Input
+                  type="text"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                  className="bg-secondary border-border font-mono pr-12"
+                  placeholder="0.00"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                  SOL
+                </span>
+                {errors.quantity && (
+                  <p className="text-xs text-red-500 mt-1">{errors.quantity}</p>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="space-y-2 pt-2 border-t border-border">
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">Total</span>
-              <span className="font-mono">
-                ₹{Number(price) * Number(quantity)}
-              </span>
+              <span className="font-mono">${totalValue.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">Fee (0.1%)</span>
-              <span className="font-mono">
-                ₹{(Number(price) * Number(quantity) * 1) / 1000}
-              </span>
+              <span className="font-mono">${fee.toFixed(2)}</span>
             </div>
           </div>
 
           <Button
             onClick={() => {
-              if (orderType == "limit") {
-                handleOrder();
+              if (orderType === "limit") {
+                handleLimitOrder();
+              } else {
+                handleMarketOrder();
               }
             }}
             className={`w-full ${

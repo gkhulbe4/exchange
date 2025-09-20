@@ -12,24 +12,18 @@ const Index = () => {
 
   return (
     <div className="h-full bg-background flex flex-col">
-      {/* Status bar */}
       <div className={`h-1 ${userId ? "bg-buy" : "bg-sell"}`} />
 
-      {/* Price ticker */}
       <div className="p-2">
         <PriceTicker />
       </div>
 
-      {/* Main content */}
       <div className="flex flex-1 gap-2 p-2 overflow-hidden max-h-[500px]">
-        {/* Left side (Chart + OrderBook/Trades) */}
         <div className="flex-1 flex gap-2 overflow-hidden">
-          {/* Trading Chart */}
           <div className="flex-1 bg-card rounded-lg border border-border p-2 overflow-hidden">
             <TradingChart />
           </div>
 
-          {/* OrderBook / Trades Tabs */}
           <div className="w-80 bg-card rounded-lg border border-border flex flex-col overflow-hidden">
             <Tabs
               defaultValue="orderBook"
@@ -71,7 +65,7 @@ const Index = () => {
         </div>
       </div>
 
-      <div className="p-2 bg-card rounded-lg border border-border m-2 overflow-y-auto max-h-96">
+      <div className="p-2 bg-card rounded-lg border border-border m-2 max-h-[400px]">
         <UserOrders />
       </div>
     </div>

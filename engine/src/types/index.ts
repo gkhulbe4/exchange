@@ -17,6 +17,19 @@ export type OrderDetails = {
   userId: string;
 };
 
+export type FinalOrder = {
+  baseAsset: string;
+  quoteAsset: string;
+  side: "buy" | "sell";
+  price: number;
+  quantity: number;
+  userId: string;
+  orderId: string;
+  filled: number;
+  market: string;
+  time: number;
+};
+
 export type Fill = {
   price: string;
   qty: number;
@@ -46,6 +59,10 @@ export type DBMessage =
         executedQuantity: number;
         fills: Fill[] | [];
       };
+    }
+  | {
+      type: "ADD_ORDER";
+      data: { order: FinalOrder; fills: Fill[] };
     };
 
 export type PublishToWS =

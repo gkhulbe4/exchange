@@ -12,6 +12,7 @@ exports.userRouter.get("/getBalance", async (req, res) => {
         }
         // console.log(`balance request received:${userId}`);
         const response = await RedisManager_1.RedisManager.getInstance().getUserBalance(userId);
+        console.log(`BALANCE FETCHED FOR ${userId} : ${JSON.stringify(response)}`);
         res.status(200).json({ response });
     }
     catch (error) {

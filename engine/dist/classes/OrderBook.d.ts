@@ -24,11 +24,11 @@ export declare class OrderBook {
         fills: Fill[];
         remainingOrder: Order | null;
     };
-    matchBid(price: number, quantity: number): {
+    matchBid(price: number, quantity: number, userId: string): {
         fills: Fill[];
         executedQuantity: number;
     };
-    matchAsk(price: number, quantity: number): {
+    matchAsk(price: number, quantity: number, userId: string): {
         fills: Fill[];
         executedQuantity: number;
     };

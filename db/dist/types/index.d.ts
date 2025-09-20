@@ -9,4 +9,24 @@ export type DBMessage = {
         qty: number;
     };
 };
+export type FinalOrder = {
+    baseAsset: string;
+    quoteAsset: string;
+    side: string;
+    price: number;
+    quantity: number;
+    userId: string;
+    orderId: string;
+    filled: number;
+    market: string;
+    time: number;
+};
+export type Fill = {
+    price: string;
+    qty: number;
+    tradeId: number;
+    otherUserId: string;
+    marketOrderId: string;
+    time: number;
+};
 //# sourceMappingURL=index.d.ts.map
