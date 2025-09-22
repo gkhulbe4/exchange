@@ -15,7 +15,6 @@ async function initialiseViews() {
     DROP TABLE IF EXISTS trades CASCADE;
     DROP TABLE IF EXISTS orders CASCADE;
   `);
-    // i should create an index on market
     await db_1.pool.query(`
         CREATE TABLE trades (
             id            BIGSERIAL,        
@@ -31,6 +30,8 @@ async function initialiseViews() {
         );
         SELECT create_hypertable('trades', 'trade_time');
   `);
+    // index on market for fast retrieval
+    await db_1.pool.query(`CREATE INDEX index_trades_market ON trades(market);`);
     await db_1.pool.query(`
     CREATE TABLE orders (
     id            BIGSERIAL ,

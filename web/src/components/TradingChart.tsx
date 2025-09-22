@@ -3,16 +3,18 @@ import { Button } from "@/components/ui/button";
 import axios from "axios";
 import CandleChart from "./CandleChart";
 import { Kline } from "@/lib/types";
+import { useParams } from "react-router-dom";
 
 const TradingChart = () => {
   const [timeFrame, setTimeFrame] = useState("15m");
   const [chartData, setChartData] = useState<Kline[]>([]);
+  const { market } = useParams();
 
   useEffect(() => {
     async function getChartData() {
       try {
         const res = await axios.get(
-          `http://localhost:3001/api/v1/trade/getKlineData?timeFrame=${timeFrame}`
+          `http://localhost:3001/api/v1/trade/getKlineData?timeFrame=${timeFrame}&market=${market}`
         );
         const data: Kline[] = res.data.response;
         // console.log(data);

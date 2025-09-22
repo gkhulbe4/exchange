@@ -9,30 +9,44 @@ class Engine {
     constructor() {
         // console.log("i am in engine constructor");
         this.orderbooks.push(new OrderBook_1.OrderBook([], [], "SOL", 1, 200));
+        this.orderbooks.push(new OrderBook_1.OrderBook([], [], "ETH", 1, 200));
+        this.orderbooks.push(new OrderBook_1.OrderBook([], [], "BTC", 1, 200));
         // console.log(this.orderbooks);
         this.balances.set("1", {
-            INR: { available: 100000, locked: 0 },
-            SOL: { available: 500000, locked: 0 },
+            USD: { available: 100000, locked: 0 },
+            SOL: { available: 1000, locked: 0 },
+            ETH: { available: 1000, locked: 0 },
+            BTC: { available: 1000, locked: 0 },
         });
         this.balances.set("2", {
-            INR: { available: 200000, locked: 0 },
-            SOL: { available: 90000, locked: 0 },
+            USD: { available: 200000, locked: 0 },
+            SOL: { available: 1000, locked: 0 },
+            ETH: { available: 1000, locked: 0 },
+            BTC: { available: 1000, locked: 0 },
         });
         this.balances.set("3", {
-            INR: { available: 300000, locked: 0 },
-            SOL: { available: 50000, locked: 0 },
+            USD: { available: 300000, locked: 0 },
+            SOL: { available: 1000, locked: 0 },
+            ETH: { available: 1000, locked: 0 },
+            BTC: { available: 1000, locked: 0 },
         });
         this.balances.set("4", {
-            INR: { available: 400000, locked: 0 },
-            SOL: { available: 100000, locked: 0 },
+            USD: { available: 400000, locked: 0 },
+            SOL: { available: 1000, locked: 0 },
+            ETH: { available: 1000, locked: 0 },
+            BTC: { available: 1000, locked: 0 },
         });
         this.balances.set("5", {
-            INR: { available: 500000, locked: 0 },
-            SOL: { available: 100000, locked: 0 },
+            USD: { available: 500000, locked: 0 },
+            SOL: { available: 1000, locked: 0 },
+            ETH: { available: 1000, locked: 0 },
+            BTC: { available: 1000, locked: 0 },
         });
         this.balances.set("6", {
-            INR: { available: 600000, locked: 0 },
-            SOL: { available: 100000, locked: 0 },
+            USD: { available: 600000, locked: 0 },
+            SOL: { available: 1000, locked: 0 },
+            ETH: { available: 1000, locked: 0 },
+            BTC: { available: 1000, locked: 0 },
         });
     }
     getUserBalance(userId) {
@@ -45,8 +59,8 @@ class Engine {
         const user = this.balances.get(userId);
         if (!user)
             throw new Error("User not found!");
-        // quote -> inr
-        // base -> sol
+        // quote -> USD
+        // base -> SOL/ETH/BTC
         if (side == "buy") {
             const userQuoteBalance = user[quoteAsset].available;
             if (userQuoteBalance < price * quantity)
@@ -74,15 +88,15 @@ class Engine {
                     throw new Error("Invalid state: locked < qty (seller)");
                 }
                 seller[baseAsset].locked -= fill.qty; // decrease locked tokens
-                seller[quoteAsset].available += fill.qty * Number(fill.price); // increase INR
+                seller[quoteAsset].available += fill.qty * Number(fill.price); // increase USD
                 // Buyer side
                 const buyer = this.balances.get(userId);
                 if (!buyer)
                     throw new Error("Buyer not found in balances");
                 if (buyer[quoteAsset].locked < fill.qty * Number(fill.price)) {
-                    throw new Error("Invalid state: locked INR < cost");
+                    throw new Error("Invalid state: locked USD < cost");
                 }
-                buyer[quoteAsset].locked -= fill.qty * Number(fill.price); // release INR
+                buyer[quoteAsset].locked -= fill.qty * Number(fill.price); // release USD
                 buyer[baseAsset].available += fill.qty; // add tokens
                 console.log("Buyer Base:", buyer[baseAsset].available);
                 console.log("Seller Base:", seller[baseAsset].available);
@@ -99,15 +113,15 @@ class Engine {
                     throw new Error("Invalid state: locked < qty (seller)");
                 }
                 seller[baseAsset].locked -= fill.qty; // decrease locked tokens
-                seller[quoteAsset].available += fill.qty * Number(fill.price); // increase INR
+                seller[quoteAsset].available += fill.qty * Number(fill.price); // increase USD
                 // Buyer side
                 const buyer = this.balances.get(fill.otherUserId);
                 if (!buyer)
                     throw new Error("Buyer not found in balances");
                 if (buyer[quoteAsset].locked < fill.qty * Number(fill.price)) {
-                    throw new Error("Invalid state: locked INR < cost");
+                    throw new Error("Invalid state: locked USD < cost");
                 }
-                buyer[quoteAsset].locked -= fill.qty * Number(fill.price); // release INR
+                buyer[quoteAsset].locked -= fill.qty * Number(fill.price); // release USD
                 buyer[baseAsset].available += fill.qty; // add tokens
                 console.log("Buyer Base:", buyer[baseAsset].available);
                 console.log("Seller Base:", seller[baseAsset].available);
@@ -141,7 +155,7 @@ class Engine {
     publishWsTrades(fills, userId, market, side, orderId) {
         console.log("Publishing TRADE");
         fills.forEach((fill) => {
-            RedisManager_1.RedisManager.getInstance().publishToWs(`trades`, {
+            RedisManager_1.RedisManager.getInstance().publishToWs(`trades.${market}`, {
                 stream: "trade",
                 data: {
                     e: "trade",
@@ -159,7 +173,7 @@ class Engine {
     }
     publishWsOrder(order) {
         console.log("Publishing Order");
-        RedisManager_1.RedisManager.getInstance().publishToWs("order", {
+        RedisManager_1.RedisManager.getInstance().publishToWs(`order.${order?.market}`, {
             stream: "order",
             data: {
                 e: "order",
@@ -182,7 +196,7 @@ class Engine {
             return o.baseAsset === baseAsset && o.quoteAsset === quoteAsset;
         });
         // console.log(orderDetails.market.split("_"));
-        // SOL_INR | BTC_INR
+        // SOL_USD | USD
         if (!orderbook) {
             throw new Error("OrderBook not found");
         }
@@ -256,12 +270,20 @@ class Engine {
             }
         }
     }
-    getOrders() {
-        const o = this.orderbooks[0];
-        RedisManager_1.RedisManager.getInstance().sendOrders(JSON.stringify({ buys: o?.bids, asks: o?.asks }));
+    getOrders(market) {
+        if (!market)
+            return;
+        console.log("GETTING ORDERS FOR MARKET: ", market);
+        const baseAsset = market.split("_")[0];
+        const orderbook = this.orderbooks.find((o) => o.baseAsset == baseAsset);
+        RedisManager_1.RedisManager.getInstance().sendOrders(JSON.stringify({ buys: orderbook?.bids, asks: orderbook?.asks }));
     }
-    getUserOrders(userId) {
-        const o = this.orderbooks[0];
+    getUserOrders(userId, market) {
+        if (!market)
+            return;
+        console.log("GETTING ORDERS FOR MARKET: ", market);
+        const baseAsset = market.split("_")[0];
+        const o = this.orderbooks.find((orderbook) => orderbook.baseAsset == baseAsset);
         const bids = o?.bids.filter((order) => order.userId == userId);
         const asks = o?.asks.filter((order) => order.userId == userId);
         RedisManager_1.RedisManager.getInstance().sendUserOrders(JSON.stringify({ buys: bids, asks: asks }));

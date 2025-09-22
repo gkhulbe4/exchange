@@ -12,21 +12,40 @@ async function startEngine() {
     const [queue, rawData] = response;
     const data = JSON.parse(rawData);
 
-    if (queue === "message") {
-      if (data.type == "userBalance") {
-        engine.getUserBalance(data.userId);
-      } else if (data.type == "order") {
-        engine.getOrders();
-      } else if (data.type == "userOrders") {
-        engine.getUserOrders(data.userId);
-      } else {
-        engine.process(data.clientId, data.message);
-      }
-    } else if (queue === "user") {
-      if (data.type === "userBalance") {
-        console.log("IN USER QUEUE , USER ID: ", data.userId);
-        engine.getUserBalance(data.userId);
-      }
+    switch (queue) {
+      case "message":
+        switch (data.type) {
+          case "userBalance":
+            engine.getUserBalance(data.userId);
+            break;
+
+          case "order":
+            engine.getOrders(data.market);
+            break;
+
+          case "userOrders":
+            engine.getUserOrders(data.userId, data.market);
+            break;
+
+          default:
+            engine.process(data.clientId, data.message);
+        }
+        break;
+
+      case "user":
+        switch (data.type) {
+          case "userBalance":
+            console.log("IN USER QUEUE , USER ID: ", data.userId);
+            engine.getUserBalance(data.userId);
+            break;
+
+          default:
+            console.warn(`Unhandled message in 'user' queue: ${data.type}`);
+        }
+        break;
+
+      default:
+        console.warn(`Unhandled queue: ${queue}`);
     }
   }
 }

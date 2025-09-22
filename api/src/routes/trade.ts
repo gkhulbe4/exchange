@@ -4,8 +4,12 @@ import { RedisManager } from "../RedisManager";
 export const tradeRouter: Router = Router();
 
 tradeRouter.get("/getTrades", async (req: Request, res: Response) => {
+  const market = req.query.market as string;
+  if (!market) {
+    res.status(404).json({ message: "Market missing" });
+  }
   try {
-    const response = await RedisManager.getInstance().getTrades();
+    const response = await RedisManager.getInstance().getTrades(market);
     // console.log(response);
     res
       .status(200)
@@ -16,9 +20,13 @@ tradeRouter.get("/getTrades", async (req: Request, res: Response) => {
 });
 
 tradeRouter.get("/getTickerData", async (req: Request, res: Response) => {
+  const market = req.query.market as string;
+  if (!market) {
+    res.status(404).json({ message: "Market missing" });
+  }
   try {
     // console.log("calling ticker data");
-    const response = await RedisManager.getInstance().getTickerData();
+    const response = await RedisManager.getInstance().getTickerData(market);
     res.status(200).json({
       message: "Ticker data fetched successfully",
       response: response,
@@ -32,11 +40,18 @@ tradeRouter.get("/getTickerData", async (req: Request, res: Response) => {
 
 tradeRouter.get("/getKlineData", async (req: Request, res: Response) => {
   const timeFrame = req.query.timeFrame as string;
+  const market = req.query.market as string;
   if (!timeFrame) {
     res.status(404).json({ message: "Timeframe is missing" });
   }
+  if (!market) {
+    res.status(404).json({ message: "Market missing" });
+  }
   try {
-    const response = await RedisManager.getInstance().getKlineData(timeFrame);
+    const response = await RedisManager.getInstance().getKlineData(
+      timeFrame,
+      market
+    );
     res.status(200).json({
       message: "Kline data fetched successfully",
       response: response,

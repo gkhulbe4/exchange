@@ -7,11 +7,12 @@ export declare class RedisManager {
     static getInstance(): RedisManager;
     sendAndAwait(message: MessageToEngine): Promise<MessageFromEngine>;
     getUserBalance(userId: string): Promise<unknown>;
-    getTrades(): Promise<unknown>;
-    getOrders(): Promise<unknown>;
-    getTickerData(): Promise<unknown>;
-    getKlineData(timeFrame: string): Promise<unknown>;
-    getUserOrders(userId: string): Promise<unknown>;
+    getTrades(market: string): Promise<unknown>;
+    getOrders(market: string): Promise<unknown>;
+    getTickerData(market: string): Promise<unknown>;
+    getKlineData(timeFrame: string, market: string): Promise<unknown>;
+    getUserOrders(userId: string, market: string): Promise<unknown>;
+    getUserOrdersFromDb(userId: string): Promise<unknown>;
     getRandomClientId(): string;
 }
 //# sourceMappingURL=RedisManager.d.ts.map

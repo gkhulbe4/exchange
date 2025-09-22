@@ -1,5 +1,6 @@
 export type IncomingWsMessage = {
     type: "SUBSCRIBE" | "UNSUBSCRIBE";
-    subType: "trades" | "depth";
+    subType: "trades" | "order";
+    market: "ETH_USD" | "SOL_USD" | "BTC_USD";
 };
 //# sourceMappingURL=index.d.ts.map

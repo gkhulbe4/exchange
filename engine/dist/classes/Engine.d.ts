@@ -1,11 +1,13 @@
 import { Fill, FinalOrder, MessageFromApi, OrderDetails } from "../types";
+type baseAssets = "SOL" | "BTC" | "ETH";
+type quoteAssets = "USD";
 export declare class Engine {
     private orderbooks;
     private balances;
     constructor();
     getUserBalance(userId: string): void;
-    checkBalanceAndLock(baseAsset: "SOL", quoteAsset: "INR", side: "buy" | "sell", price: number, quantity: number, userId: string): void;
-    updateBalances(baseAsset: "SOL", quoteAsset: "INR", fills: Fill[], executedQuantity: number, side: string, userId: string): void;
+    checkBalanceAndLock(baseAsset: baseAssets, quoteAsset: quoteAssets, side: "buy" | "sell", price: number, quantity: number, userId: string): void;
+    updateBalances(baseAsset: baseAssets, quoteAsset: quoteAssets, fills: Fill[], executedQuantity: number, side: string, userId: string): void;
     createDbTrade(fills: Fill[], market: string, userId: string, side: string): void;
     handleDbOrder(order: FinalOrder, fills: Fill[]): void;
     publishWsTrades(fills: Fill[], userId: string, market: string, side: string, orderId: string): void;
@@ -26,7 +28,8 @@ export declare class Engine {
         orderId: string;
     };
     process(clientId: string, message: MessageFromApi): void;
-    getOrders(): void;
-    getUserOrders(userId: string): void;
+    getOrders(market: string): void;
+    getUserOrders(userId: string, market: string): void;
 }
+export {};
 //# sourceMappingURL=Engine.d.ts.map

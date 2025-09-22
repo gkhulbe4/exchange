@@ -4,20 +4,27 @@ export type WebSocketContextType = {
   userId: string;
   setUserId: React.Dispatch<React.SetStateAction<string>>;
   userBalance: {
-    INR: number;
+    USD: number;
     SOL: number;
+    ETH: number;
+    BTC: number;
   };
   setUserBalance: React.Dispatch<
-    React.SetStateAction<{ INR: number | null; SOL: number | null }>
+    React.SetStateAction<{
+      USD: number | null;
+      SOL: number | null;
+      ETH: number | null;
+      BTC: number | null;
+    }>
   >;
   refetchUserBalance: () => void;
   trades: Trade[];
   ticker: Ticker;
   // currentPrice: string;
-  userOrders:{
-    bids:  RawOrder[],
-    asks:RawOrder[]
-  }
+  userOrders: {
+    bids: RawOrder[];
+    asks: RawOrder[];
+  };
 };
 
 export type Trade = {
@@ -43,7 +50,6 @@ export type Kline = {
   market: string;
   volume: string;
 };
-
 
 export type RawOrder = {
   orderId: string;

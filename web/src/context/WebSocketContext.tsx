@@ -15,6 +15,7 @@ import {
   useRef,
   useCallback,
 } from "react";
+import { useParams } from "react-router-dom";
 
 export type AggregatedOrder = {
   price: number;
@@ -39,7 +40,7 @@ const WebSocketContext = createContext<
   isConnected: false,
   userId: null,
   setUserId: () => {},
-  userBalance: { INR: null, SOL: null },
+  userBalance: { USD: null, SOL: null, ETH: null, BTC: null },
   setUserBalance: () => {},
   refetchUserBalance: () => {},
   trades: [],
@@ -91,12 +92,23 @@ function aggregateOrders(
   });
 }
 
-function WebSocketProvider({ children }: { children: ReactNode }) {
+function WebSocketProvider({
+  children,
+  market,
+}: {
+  children: ReactNode;
+  market: string;
+}) {
   // Core state
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
-  const [userBalance, setUserBalance] = useState({ INR: null, SOL: null });
+  const [userBalance, setUserBalance] = useState({
+    USD: null,
+    SOL: null,
+    ETH: null,
+    BTC: null,
+  });
   const [trades, setTrades] = useState<Trade[]>([]);
   const [ticker, setTicker] = useState<Ticker>({
     max_price: null,
@@ -114,9 +126,11 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
   // Refs for WebSocket callbacks
   const userOrdersRef = useRef(userOrders);
   const userIdRef = useRef(userId);
+  console.log("USER ID IN STATE: ", userId);
 
   // console.log("USER REF ID: ", userIdRef.current);
 
+  // user ID
   useEffect(() => {
     const storedId = localStorage.getItem("userId");
     if (storedId && storedId.length > 0) {
@@ -155,8 +169,10 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
 
       if (data) {
         setUserBalance({
-          INR: data.INR?.available || 0,
-          SOL: data.SOL?.available || 0,
+          USD: data?.USD?.available || 0,
+          SOL: data?.SOL?.available || 0,
+          ETH: data?.ETH?.available || 0,
+          BTC: data?.BTC?.available || 0,
         });
       }
     } catch (error) {
@@ -169,8 +185,10 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
     console.log("USER BALANCE: ", balanceQuery.data);
     if (balanceQuery.data) {
       setUserBalance({
-        INR: balanceQuery.data.INR?.available || 0,
-        SOL: balanceQuery.data.SOL?.available || 0,
+        USD: balanceQuery?.data?.USD?.available || 0,
+        SOL: balanceQuery?.data?.SOL?.available || 0,
+        ETH: balanceQuery?.data?.ETH?.available || 0,
+        BTC: balanceQuery?.data?.BTC?.available || 0,
       });
     }
   }, [balanceQuery.data]);
@@ -187,14 +205,13 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     async function loadData() {
       try {
-        console.log("i am in loadData");
+        console.log("LOADING DATA FROM TRADES, TICKER, ORDERS");
         const [tradesData, tickerData, ordersData] = await Promise.all([
-          fetchTrades(),
-          fetchTickerData(),
-          fetchOrders(),
+          fetchTrades(market),
+          fetchTickerData(market),
+          fetchOrders(market),
         ]);
 
-        console.log("TRADES: ", tradesData);
         console.log("TICKER: ", tickerData);
         console.log("TRADES: ", tradesData.response);
         if (tradesData?.response) setTrades(tradesData.response);
@@ -230,7 +247,7 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
     }
 
     loadData();
-  }, []);
+  }, [market]);
 
   // Load user orders when userId changes
   useEffect(() => {
@@ -239,7 +256,7 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    fetchUserOrder(userId)
+    fetchUserOrder(userId, market)
       .then((data) => {
         setUserOrders({
           bids: data?.response?.buys ?? [],
@@ -250,10 +267,13 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
         console.error("Failed to load user orders:", error);
         setUserOrders({ bids: [], asks: [] });
       });
-  }, [userId]);
+  }, [userId, market]);
 
   // WebSocket connection
   useEffect(() => {
+    if (!market) return;
+    if (!userIdRef.current) return;
+
     const wsUrl = userId
       ? `ws://localhost:8080?userId=${userId}`
       : `ws://localhost:8080`;
@@ -262,13 +282,19 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
     ws.onopen = () => {
       setSocket(ws);
       setIsConnected(true);
-      ws.send(JSON.stringify({ type: "SUBSCRIBE", subType: "trades" }));
-      ws.send(JSON.stringify({ type: "SUBSCRIBE", subType: "order" }));
+      ws.send(
+        JSON.stringify({ type: "SUBSCRIBE", subType: "trades", market: market })
+      );
+      ws.send(
+        JSON.stringify({ type: "SUBSCRIBE", subType: "order", market: market })
+      );
     };
 
     ws.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data);
+        console.log(message);
+        if (message.data.m !== market) return;
 
         if (message.stream === "trade") {
           const t = message.data;
@@ -396,11 +422,27 @@ function WebSocketProvider({ children }: { children: ReactNode }) {
 
     ws.onerror = (error) => console.error("WebSocket error:", error);
     ws.onclose = () => {
+      if (market && userIdRef.current) {
+        ws.send(
+          JSON.stringify({ type: "UNSUBSCRIBE", subType: "trades", market })
+        );
+        ws.send(
+          JSON.stringify({ type: "UNSUBSCRIBE", subType: "order", market })
+        );
+      }
       setSocket(null);
       setIsConnected(false);
     };
 
-    return () => ws.close();
+    return () => {
+      ws.send(
+        JSON.stringify({ type: "UNSUBSCRIBE", subType: "trades", market })
+      );
+      ws.send(
+        JSON.stringify({ type: "UNSUBSCRIBE", subType: "order", market })
+      );
+      ws.close();
+    };
   }, [userId, refreshBalance]);
 
   return (

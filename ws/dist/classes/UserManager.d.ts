@@ -7,6 +7,5 @@ export declare class UserManager {
     addUser(ws: WebSocket, userId: string): void;
     closeWs(id: string, ws: WebSocket): void;
     getUser(userId: string): WebSocket | undefined;
-    getRandomClientId(): string;
 }
 //# sourceMappingURL=UserManager.d.ts.map

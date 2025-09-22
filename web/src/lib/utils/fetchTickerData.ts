@@ -1,10 +1,10 @@
 import axios from "axios";
 
-export async function fetchTickerData() {
+export async function fetchTickerData(market: string) {
   try {
-    console.log("i am in fetchTickerData");
+    // console.log("i am in fetchTickerData");
     const res = await axios.get(
-      "http://localhost:3001/api/v1/trade/getTickerData"
+      `http://localhost:3001/api/v1/trade/getTickerData?market=${market}`
     );
     const data = res.data;
     // console.log("TICKER DATA: ", data);

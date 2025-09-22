@@ -38,8 +38,12 @@ orderRouter.post("/", async (req: Request, res: Response) => {
 });
 
 orderRouter.get("/getOrders", async (req: Request, res: Response) => {
+  const market = req.query.market as string;
+  if (!market) {
+    res.status(404).json({ message: "Market missing" });
+  }
   try {
-    const response = await RedisManager.getInstance().getOrders();
+    const response = await RedisManager.getInstance().getOrders(market);
     // console.log(response);
     res
       .status(200)
@@ -52,11 +56,18 @@ orderRouter.get("/getOrders", async (req: Request, res: Response) => {
 orderRouter.get("/getUserOrders", async (req: Request, res: Response) => {
   try {
     const userId = req.query.userId as string;
+    const market = req.query.market as string;
     // console.log(userId);
     if (!userId) {
       res.status(400).json({ message: "User ID not found" });
     }
-    const response = await RedisManager.getInstance().getUserOrders(userId);
+    if (!market) {
+      res.status(404).json({ message: "Market missing" });
+    }
+    const response = await RedisManager.getInstance().getUserOrders(
+      userId,
+      market
+    );
     // console.log(response);
     res
       .status(200)
@@ -65,5 +76,25 @@ orderRouter.get("/getUserOrders", async (req: Request, res: Response) => {
     res
       .status(500)
       .json({ message: "Error while fetching user's orders", error });
+  }
+});
+
+orderRouter.get("/getUserOrdersFromDb", async (req: Request, res: Response) => {
+  try {
+    const userId = req.query.userId as string;
+    if (!userId) {
+      res.status(404).json({ message: "User Id not found" });
+    }
+
+    const response = await RedisManager.getInstance().getUserOrdersFromDb(
+      userId
+    );
+    res
+      .status(200)
+      .json({ message: "Fetched user's order from DB successfully", response });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error while fetching user's orders from DB", error });
   }
 });

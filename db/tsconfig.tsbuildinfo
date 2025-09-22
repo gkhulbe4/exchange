@@ -1,1 +1,1 @@
-{"root":["./src/db.ts","./src/index.ts","./src/initialiseviews.ts","./src/lib/addtradeindb.ts","./src/lib/getklinedatafromdb.ts","./src/lib/gettickerdatafromdb.ts","./src/lib/gettradesfromdb.ts","./src/lib/handleorderindb.ts","./src/types/index.ts"],"version":"5.9.2"}
+{"root":["./src/db.ts","./src/index.ts","./src/initialiseviews.ts","./src/lib/addtradeindb.ts","./src/lib/getklinedatafromdb.ts","./src/lib/gettickerdatafromdb.ts","./src/lib/gettradesfromdb.ts","./src/lib/getuserordersfromdb.ts","./src/lib/handleorderindb.ts","./src/types/index.ts"],"version":"5.9.2"}

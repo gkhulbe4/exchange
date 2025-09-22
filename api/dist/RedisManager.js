@@ -51,10 +51,10 @@ class RedisManager {
             });
         });
     }
-    getTrades() {
+    getTrades(market) {
         return new Promise(async (resolve) => {
             this.subClient.subscribe("trades");
-            await this.pubClient.lpush("dbMessage", JSON.stringify({ type: "trades" }));
+            await this.pubClient.lpush("dbMessage", JSON.stringify({ type: "trades", market: market }));
             this.subClient.on("message", (channel, message) => {
                 if (channel == "trades") {
                     this.subClient.unsubscribe("trades");
@@ -63,9 +63,9 @@ class RedisManager {
             });
         });
     }
-    getOrders() {
+    getOrders(market) {
         return new Promise(async (resolve) => {
-            await this.pubClient.lpush("message", JSON.stringify({ type: "order" }));
+            await this.pubClient.lpush("message", JSON.stringify({ type: "order", market: market }));
             this.subClient.subscribe("order");
             this.subClient.on("message", (channel, message) => {
                 // console.log(channel, message);
@@ -76,10 +76,10 @@ class RedisManager {
             });
         });
     }
-    getTickerData() {
+    getTickerData(market) {
         return new Promise(async (resolve) => {
             this.subClient.subscribe("ticker");
-            await this.pubClient.lpush("dbMessage", JSON.stringify({ type: "ticker" }));
+            await this.pubClient.lpush("dbMessage", JSON.stringify({ type: "ticker", market: market }));
             this.subClient.on("message", (channel, message) => {
                 if (channel == "ticker") {
                     this.subClient.unsubscribe("ticker");
@@ -88,10 +88,10 @@ class RedisManager {
             });
         });
     }
-    getKlineData(timeFrame) {
+    getKlineData(timeFrame, market) {
         return new Promise(async (resolve) => {
             this.subClient.subscribe("kline");
-            await this.pubClient.lpush("dbMessage", JSON.stringify({ type: "kline", timeFrame: timeFrame }));
+            await this.pubClient.lpush("dbMessage", JSON.stringify({ type: "kline", timeFrame: timeFrame, market: market }));
             this.subClient.on("message", (channel, message) => {
                 if (channel == "kline") {
                     this.subClient.unsubscribe("kline");
@@ -100,13 +100,25 @@ class RedisManager {
             });
         });
     }
-    getUserOrders(userId) {
+    getUserOrders(userId, market) {
         return new Promise(async (resolve) => {
             this.subClient.subscribe("userOrders");
-            await this.pubClient.lpush("message", JSON.stringify({ type: "userOrders", userId: userId }));
+            await this.pubClient.lpush("message", JSON.stringify({ type: "userOrders", userId: userId, market: market }));
             this.subClient.on("message", (channel, message) => {
                 if (channel == "userOrders") {
                     this.subClient.unsubscribe("userOrders");
+                    resolve(JSON.parse(message));
+                }
+            });
+        });
+    }
+    getUserOrdersFromDb(userId) {
+        return new Promise(async (resolve) => {
+            this.subClient.subscribe("userOrdersFromDb");
+            await this.pubClient.lpush("dbMessage", JSON.stringify({ type: "userOrdersFromDb", userId: userId }));
+            this.subClient.on("message", (channel, message) => {
+                if (channel == "userOrdersFromDb") {
+                    this.subClient.unsubscribe("userOrdersFromDb");
                     resolve(JSON.parse(message));
                 }
             });

@@ -47,7 +47,7 @@ function UserOrders() {
           Your Orders
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Track your active and completed trading orders
+          Track your active trading orders
         </p>
       </CardHeader>
 
@@ -70,7 +70,7 @@ function UserOrders() {
               <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Filled
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Market
               </th>
               <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -81,7 +81,18 @@ function UserOrders() {
           <tbody className="divide-y divide-border">
             {allOrders.map((order) => {
               const { status } = getOrderStatus(order.filled, order.quantity);
-              return <Order order={order} status={status} />;
+              return (
+                <Order
+                  key={order.orderId}
+                  price={order.price}
+                  quantity={order.quantity}
+                  filled={order.filled}
+                  market={order.market}
+                  orderId={order.orderId}
+                  side={order.side}
+                  status={status}
+                />
+              );
             })}
           </tbody>
         </table>

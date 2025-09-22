@@ -29,11 +29,4 @@ export class UserManager {
   getUser(userId: string) {
     return this.users.get(userId);
   }
-
-  getRandomClientId() {
-    return (
-      Math.random().toString(36).substring(2, 15) +
-      Math.random().toString(36).substring(2, 15)
-    );
-  }
 }

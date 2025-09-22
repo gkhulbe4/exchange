@@ -3,26 +3,27 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import WebSocketProvider from "./context/WebSocketContext";
 import NotFound from "./pages/NotFound";
-import Index from "./pages/Index";
+import Orders from "./pages/Orders";
+import Home from "./pages/Home";
+import Market from "./pages/Market";
 
 export const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <WebSocketProvider>
+    <BrowserRouter>
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/market/:market" element={<Market />} />
+          <Route path="*" element={<NotFound />} />
+          <Route path="/orders" element={<Orders />} />
+        </Routes>
       </TooltipProvider>
-    </WebSocketProvider>
+    </BrowserRouter>
   </QueryClientProvider>
 );
 

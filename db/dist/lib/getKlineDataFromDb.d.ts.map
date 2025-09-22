@@ -1,1 +1,1 @@
-{"version":3,"file":"getKlineDataFromDb.d.ts","sourceRoot":"","sources":["../../src/lib/getKlineDataFromDb.ts"],"names":[],"mappings":"AAEA,wBAAsB,kBAAkB,CAAC,SAAS,EAAE,MAAM,kBAIzD"}
+{"version":3,"file":"getKlineDataFromDb.d.ts","sourceRoot":"","sources":["../../src/lib/getKlineDataFromDb.ts"],"names":[],"mappings":"AAIA,wBAAsB,kBAAkB,CAAC,SAAS,EAAE,MAAM,EAAE,MAAM,EAAE,MAAM,kBAczE"}

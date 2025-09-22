@@ -1,2 +1,2 @@
-export declare function getTradesFromDb(): Promise<any[]>;
+export declare function getTradesFromDb(market: string): Promise<any[]>;
 //# sourceMappingURL=getTradesFromDb.d.ts.map

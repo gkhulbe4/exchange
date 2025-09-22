@@ -4,6 +4,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const axios_1 = __importDefault(require("axios"));
+const userIds = ["3", "4", "5", "6"];
+const markets = ["SOL_USD", "ETH_USD", "BTC_USD"];
 async function makeOrder(orderDetails) {
     try {
         await axios_1.default.post("http://localhost:3001/api/v1/order", orderDetails);
@@ -13,19 +15,19 @@ async function makeOrder(orderDetails) {
         console.error("Error placing order:", error);
     }
 }
-async function createSeedOrders() {
+async function createSeedOrders(market) {
     try {
         const userIds = ["3", "4", "5", "6"];
         const basePrice = 200;
         await makeOrder({
-            market: "SOL_INR",
+            market: market,
             price: basePrice - 1,
             quantity: 5,
             side: "buy",
             userId: userIds[0],
         });
         await makeOrder({
-            market: "SOL_INR",
+            market: market,
             price: basePrice + 1,
             quantity: 5,
             side: "sell",
@@ -40,16 +42,16 @@ async function createSeedOrders() {
 async function startMarketMaker() {
     setInterval(async () => {
         try {
-            const userIds = ["3", "4", "5", "6"];
             const userId = userIds[Math.floor(Math.random() * userIds.length)];
-            const res = await axios_1.default.get("http://localhost:3001/api/v1/order/getOrders");
+            const market = markets[Math.floor(Math.random() * markets.length)];
+            const res = await axios_1.default.get(`http://localhost:3001/api/v1/order/getOrders?market=${market}`);
             const data = res.data;
             const allBuys = data.response.buys || [];
             const allSells = data.response.asks || [];
             // If no orders exists then create seed orders
             if (allBuys.length === 0 && allSells.length === 0) {
                 console.log("Empty order book, creating seed orders...");
-                await createSeedOrders();
+                await createSeedOrders(market);
                 return;
             }
             // If only one side exists then create orders for the other side
@@ -59,7 +61,7 @@ async function startMarketMaker() {
                     const price = lowestSellPrice - 2;
                     const quantity = Math.floor(Math.random() * 10) + 3;
                     await makeOrder({
-                        market: "SOL_INR",
+                        market: market,
                         price: price,
                         quantity: quantity,
                         side: "buy",
@@ -77,7 +79,7 @@ async function startMarketMaker() {
                     const price = highestBuyPrice + 2;
                     const quantity = Math.floor(Math.random() * 10) + 3;
                     await makeOrder({
-                        market: "SOL_INR",
+                        market: market,
                         price: price,
                         quantity: quantity,
                         side: "sell",
@@ -104,7 +106,7 @@ async function startMarketMaker() {
                 }
                 const quantity = Math.floor(Math.random() * 10) + 3;
                 const orderDetails = {
-                    market: "SOL_INR",
+                    market: market,
                     price: price,
                     quantity: quantity,
                     side: side,
@@ -120,7 +122,7 @@ async function startMarketMaker() {
         catch (error) {
             console.error("Error in market maker cycle:", error);
         }
-    }, 1000);
+    }, 200);
 }
 try {
     startMarketMaker();

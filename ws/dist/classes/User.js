@@ -15,10 +15,10 @@ class User {
             const parsedMessage = JSON.parse(message);
             console.log("Message from frontend:", parsedMessage);
             if (parsedMessage.type == "SUBSCRIBE") {
-                SubscriptionManager_1.SubscriptionManager.getInstance().subscribe(this.id, parsedMessage.subType);
+                SubscriptionManager_1.SubscriptionManager.getInstance().subscribe(this.id, parsedMessage.subType, parsedMessage.market);
             }
             else if (parsedMessage.type == "UNSUBSCRIBE") {
-                SubscriptionManager_1.SubscriptionManager.getInstance().unsubscribe(this.id, parsedMessage.subType);
+                SubscriptionManager_1.SubscriptionManager.getInstance().unsubscribe(this.id, parsedMessage.subType, parsedMessage.market);
             }
         });
     }

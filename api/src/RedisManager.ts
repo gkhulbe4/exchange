@@ -58,12 +58,12 @@ export class RedisManager {
     });
   }
 
-  public getTrades() {
+  public getTrades(market: string) {
     return new Promise(async (resolve) => {
       this.subClient.subscribe("trades");
       await this.pubClient.lpush(
         "dbMessage",
-        JSON.stringify({ type: "trades" })
+        JSON.stringify({ type: "trades", market: market })
       );
       this.subClient.on("message", (channel: string, message: string) => {
         if (channel == "trades") {
@@ -74,9 +74,12 @@ export class RedisManager {
     });
   }
 
-  public getOrders() {
+  public getOrders(market: string) {
     return new Promise(async (resolve) => {
-      await this.pubClient.lpush("message", JSON.stringify({ type: "order" }));
+      await this.pubClient.lpush(
+        "message",
+        JSON.stringify({ type: "order", market: market })
+      );
       this.subClient.subscribe("order");
       this.subClient.on("message", (channel: string, message: string) => {
         // console.log(channel, message);
@@ -88,12 +91,12 @@ export class RedisManager {
     });
   }
 
-  public getTickerData() {
+  public getTickerData(market: string) {
     return new Promise(async (resolve) => {
       this.subClient.subscribe("ticker");
       await this.pubClient.lpush(
         "dbMessage",
-        JSON.stringify({ type: "ticker" })
+        JSON.stringify({ type: "ticker", market: market })
       );
       this.subClient.on("message", (channel: string, message: string) => {
         if (channel == "ticker") {
@@ -104,12 +107,12 @@ export class RedisManager {
     });
   }
 
-  public getKlineData(timeFrame: string) {
+  public getKlineData(timeFrame: string, market: string) {
     return new Promise(async (resolve) => {
       this.subClient.subscribe("kline");
       await this.pubClient.lpush(
         "dbMessage",
-        JSON.stringify({ type: "kline", timeFrame: timeFrame })
+        JSON.stringify({ type: "kline", timeFrame: timeFrame, market: market })
       );
       this.subClient.on("message", (channel: string, message: string) => {
         if (channel == "kline") {
@@ -120,16 +123,32 @@ export class RedisManager {
     });
   }
 
-  public getUserOrders(userId: string) {
+  public getUserOrders(userId: string, market: string) {
     return new Promise(async (resolve) => {
       this.subClient.subscribe("userOrders");
       await this.pubClient.lpush(
         "message",
-        JSON.stringify({ type: "userOrders", userId: userId })
+        JSON.stringify({ type: "userOrders", userId: userId, market: market })
       );
       this.subClient.on("message", (channel: string, message: string) => {
         if (channel == "userOrders") {
           this.subClient.unsubscribe("userOrders");
+          resolve(JSON.parse(message));
+        }
+      });
+    });
+  }
+
+  public getUserOrdersFromDb(userId: string) {
+    return new Promise(async (resolve) => {
+      this.subClient.subscribe("userOrdersFromDb");
+      await this.pubClient.lpush(
+        "dbMessage",
+        JSON.stringify({ type: "userOrdersFromDb", userId: userId })
+      );
+      this.subClient.on("message", (channel: string, message: string) => {
+        if (channel == "userOrdersFromDb") {
+          this.subClient.unsubscribe("userOrdersFromDb");
           resolve(JSON.parse(message));
         }
       });

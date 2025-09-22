@@ -19,12 +19,14 @@ export class User {
       if (parsedMessage.type == "SUBSCRIBE") {
         SubscriptionManager.getInstance().subscribe(
           this.id,
-          parsedMessage.subType
+          parsedMessage.subType,
+          parsedMessage.market
         );
       } else if (parsedMessage.type == "UNSUBSCRIBE") {
         SubscriptionManager.getInstance().unsubscribe(
           this.id,
-          parsedMessage.subType
+          parsedMessage.subType,
+          parsedMessage.market
         );
       }
     });

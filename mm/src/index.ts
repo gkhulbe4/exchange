@@ -12,6 +12,9 @@ type Order = {
   userId: string;
 };
 
+const userIds = ["3", "4", "5", "6"];
+const markets = ["SOL_USD", "ETH_USD", "BTC_USD"];
+
 async function makeOrder(orderDetails: {
   market: string;
   price: number;
@@ -27,13 +30,13 @@ async function makeOrder(orderDetails: {
   }
 }
 
-async function createSeedOrders() {
+async function createSeedOrders(market: string) {
   try {
     const userIds = ["3", "4", "5", "6"];
     const basePrice = 200;
 
     await makeOrder({
-      market: "SOL_INR",
+      market: market,
       price: basePrice - 1,
       quantity: 5,
       side: "buy",
@@ -41,7 +44,7 @@ async function createSeedOrders() {
     });
 
     await makeOrder({
-      market: "SOL_INR",
+      market: market,
       price: basePrice + 1,
       quantity: 5,
       side: "sell",
@@ -57,11 +60,10 @@ async function createSeedOrders() {
 async function startMarketMaker() {
   setInterval(async () => {
     try {
-      const userIds = ["3", "4", "5", "6"];
       const userId = userIds[Math.floor(Math.random() * userIds.length)];
-
+      const market = markets[Math.floor(Math.random() * markets.length)];
       const res = await axios.get(
-        "http://localhost:3001/api/v1/order/getOrders"
+        `http://localhost:3001/api/v1/order/getOrders?market=${market}`
       );
       const data = res.data;
       const allBuys: Order[] = data.response.buys || [];
@@ -70,7 +72,7 @@ async function startMarketMaker() {
       // If no orders exists then create seed orders
       if (allBuys.length === 0 && allSells.length === 0) {
         console.log("Empty order book, creating seed orders...");
-        await createSeedOrders();
+        await createSeedOrders(market!);
         return;
       }
 
@@ -84,7 +86,7 @@ async function startMarketMaker() {
           const quantity = Math.floor(Math.random() * 10) + 3;
 
           await makeOrder({
-            market: "SOL_INR",
+            market: market!,
             price: price,
             quantity: quantity,
             side: "buy",
@@ -103,7 +105,7 @@ async function startMarketMaker() {
           const quantity = Math.floor(Math.random() * 10) + 3;
 
           await makeOrder({
-            market: "SOL_INR",
+            market: market!,
             price: price,
             quantity: quantity,
             side: "sell",
@@ -133,7 +135,7 @@ async function startMarketMaker() {
         const quantity = Math.floor(Math.random() * 10) + 3;
 
         const orderDetails = {
-          market: "SOL_INR",
+          market: market!,
           price: price,
           quantity: quantity,
           side: side,
@@ -148,7 +150,7 @@ async function startMarketMaker() {
     } catch (error) {
       console.error("Error in market maker cycle:", error);
     }
-  }, 1000);
+  }, 200);
 }
 
 try {

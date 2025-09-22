@@ -38,8 +38,12 @@ exports.orderRouter.post("/", async (req, res) => {
     }
 });
 exports.orderRouter.get("/getOrders", async (req, res) => {
+    const market = req.query.market;
+    if (!market) {
+        res.status(404).json({ message: "Market missing" });
+    }
     try {
-        const response = await RedisManager_1.RedisManager.getInstance().getOrders();
+        const response = await RedisManager_1.RedisManager.getInstance().getOrders(market);
         // console.log(response);
         res
             .status(200)
@@ -52,11 +56,15 @@ exports.orderRouter.get("/getOrders", async (req, res) => {
 exports.orderRouter.get("/getUserOrders", async (req, res) => {
     try {
         const userId = req.query.userId;
+        const market = req.query.market;
         // console.log(userId);
         if (!userId) {
             res.status(400).json({ message: "User ID not found" });
         }
-        const response = await RedisManager_1.RedisManager.getInstance().getUserOrders(userId);
+        if (!market) {
+            res.status(404).json({ message: "Market missing" });
+        }
+        const response = await RedisManager_1.RedisManager.getInstance().getUserOrders(userId, market);
         // console.log(response);
         res
             .status(200)
@@ -66,6 +74,23 @@ exports.orderRouter.get("/getUserOrders", async (req, res) => {
         res
             .status(500)
             .json({ message: "Error while fetching user's orders", error });
+    }
+});
+exports.orderRouter.get("/getUserOrdersFromDb", async (req, res) => {
+    try {
+        const userId = req.query.userId;
+        if (!userId) {
+            res.status(404).json({ message: "User Id not found" });
+        }
+        const response = await RedisManager_1.RedisManager.getInstance().getUserOrdersFromDb(userId);
+        res
+            .status(200)
+            .json({ message: "Fetched user's order from DB successfully", response });
+    }
+    catch (error) {
+        res
+            .status(500)
+            .json({ message: "Error while fetching user's orders from DB", error });
     }
 });
 //# sourceMappingURL=order.js.map

@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import axios from "axios";
 import { orderSchema } from "@/lib/schema";
 
-const OrderPanel = () => {
+const OrderPanel = ({ market }: { market: string }) => {
   const { socket, userBalance, userId, refetchUserBalance, ticker } =
     useWebSocket();
   const [orderType, setOrderType] = useState<"limit" | "market">("limit");
@@ -18,6 +18,7 @@ const OrderPanel = () => {
     {}
   );
   const [toggleQuantity, setToggleQuantity] = useState(false);
+  const baseAsset = market.split("_")[0];
 
   async function handleLimitOrder() {
     if (!socket && !userId) return;
@@ -40,7 +41,7 @@ const OrderPanel = () => {
         : Number(quantity) + (Number(price) * Number(quantity) * 1) / 1000;
 
     const balance =
-      side === "buy" ? userBalance.INR ?? 0 : userBalance.SOL ?? 0;
+      side === "buy" ? userBalance.USD ?? 0 : userBalance[baseAsset] ?? 0;
 
     if (total > balance) {
       toast.error("Not enough balance");
@@ -49,7 +50,7 @@ const OrderPanel = () => {
 
     try {
       const res = await axios.post("http://localhost:3001/api/v1/order", {
-        market: "SOL_INR",
+        market: market,
         price: Number(price),
         quantity: Number(quantity),
         side: side,
@@ -84,7 +85,7 @@ const OrderPanel = () => {
     }
 
     const balance =
-      side === "buy" ? userBalance.INR ?? 0 : userBalance.SOL ?? 0;
+      side === "buy" ? userBalance.USD ?? 0 : userBalance[baseAsset] ?? 0;
 
     const total =
       side === "buy" ? solQuantity * Number(ticker.price) : solQuantity;
@@ -96,7 +97,7 @@ const OrderPanel = () => {
 
     try {
       const res = await axios.post("http://localhost:3001/api/v1/order", {
-        market: "SOL_INR",
+        market: market,
         price: Number(ticker.price),
         quantity: solQuantity,
         side: side,
@@ -185,10 +186,12 @@ const OrderPanel = () => {
             <span>Available</span>
             <span className="font-mono">
               {side === "buy"
-                ? `$${userBalance.INR ? userBalance.INR.toLocaleString() : 0}`
+                ? `$${userBalance.USD ? userBalance.USD.toLocaleString() : 0}`
                 : `${
-                    userBalance.SOL ? userBalance.SOL.toLocaleString() : 0
-                  } SOL`}
+                    userBalance[baseAsset]
+                      ? userBalance[baseAsset].toLocaleString()
+                      : 0
+                  } ${baseAsset}`}
             </span>
           </div>
 
@@ -232,7 +235,7 @@ const OrderPanel = () => {
                       ).toLocaleString()}`
                     : `≈ ${(Number(quantity) / Number(ticker.price)).toFixed(
                         4
-                      )} SOL`}
+                      )} ${baseAsset}`}
                 </span>
               </label>
               <div className="relative">
@@ -244,7 +247,7 @@ const OrderPanel = () => {
                   placeholder="0.00"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                  {toggleQuantity ? "SOL" : "USD"}
+                  {toggleQuantity ? `${baseAsset}` : "USD"}
                 </span>
               </div>
             </div>
@@ -262,7 +265,7 @@ const OrderPanel = () => {
                   placeholder="0.00"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
-                  SOL
+                  {baseAsset}
                 </span>
                 {errors.quantity && (
                   <p className="text-xs text-red-500 mt-1">{errors.quantity}</p>
@@ -296,7 +299,7 @@ const OrderPanel = () => {
                 : "bg-sell hover:bg-sell-hover shadow-glow-sell"
             } text-white font-semibold`}
           >
-            {side === "buy" ? "Buy" : "Sell"} SOL
+            {side === "buy" ? "Buy" : "Sell"} {baseAsset}
           </Button>
         </div>
       </div>

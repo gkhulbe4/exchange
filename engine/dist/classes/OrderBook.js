@@ -5,7 +5,7 @@ class OrderBook {
     bids;
     asks;
     baseAsset;
-    quoteAsset = "INR";
+    quoteAsset = "USD";
     lastTradeId;
     currentPrice;
     constructor(bids, asks, baseAsset, lastTradeId, currentPrice) {

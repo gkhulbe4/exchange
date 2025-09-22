@@ -22,52 +22,58 @@ export class SubscriptionManager {
     return this.instance;
   }
 
-  subscribe(userId: string, subscription: string) {
+  subscribe(userId: string, subscription: string, market: string) {
+    // trade.SOL_USD or order.SOL_USD
+    const sub = `${subscription}.${market}`;
     // if user doesnt exist then make an array of subs for him
     if (!this.subscriptions.has(userId)) {
       this.subscriptions.set(userId, []);
     }
 
     const userSubscriptions = this.subscriptions.get(userId);
-    if (userSubscriptions?.includes(subscription)) {
+    if (userSubscriptions?.includes(sub)) {
       return;
     }
 
-    userSubscriptions?.push(subscription);
+    // pushing sub to user's array
+    userSubscriptions?.push(sub);
 
     // check if sub exists , if not , make it
-    if (!this.reverseSubscriptions.has(subscription)) {
-      this.reverseSubscriptions.set(subscription, []);
+    if (!this.reverseSubscriptions.has(sub)) {
+      this.reverseSubscriptions.set(sub, []);
     }
-    this.reverseSubscriptions.get(subscription)!.push(userId);
+    this.reverseSubscriptions.get(sub)!.push(userId);
 
-    if (this.reverseSubscriptions.get(subscription)?.length == 1) {
-      this.redisClient.subscribe(subscription);
+    if (this.reverseSubscriptions.get(sub)?.length == 1) {
+      this.redisClient.subscribe(sub);
     }
 
-    console.log("User subscribed to channel :", subscription);
+    console.log("User subscribed to channel :", sub);
   }
 
-  unsubscribe(userId: string, subscription: string) {
+  unsubscribe(userId: string, subscription: string, market: string) {
+    // trade.SOL_USD or order.SOL_USD
+    const channelToUnsub = `${subscription}.${market}`;
+
     const userSubscriptions = this.subscriptions.get(userId);
-    if (!userSubscriptions?.includes(subscription)) {
+    if (!userSubscriptions?.includes(channelToUnsub)) {
       return;
     }
 
     // setting updated subs of user after removing
-    const newSubs = userSubscriptions.filter((sub) => sub != subscription);
+    const newSubs = userSubscriptions.filter((sub) => sub != channelToUnsub);
     this.subscriptions.set(userId, newSubs);
 
     // removing the user from the subs list
-    const allUserSubs = this.reverseSubscriptions.get(subscription);
+    const allUserSubs = this.reverseSubscriptions.get(channelToUnsub);
     const newUsers = allUserSubs?.filter((user) => user != userId);
 
-    this.reverseSubscriptions.set(subscription, newUsers || []);
+    this.reverseSubscriptions.set(channelToUnsub, newUsers || []);
 
-    if (this.reverseSubscriptions.get(subscription)?.length == 0) {
-      this.redisClient.unsubscribe(subscription);
+    if (this.reverseSubscriptions.get(channelToUnsub)?.length == 0) {
+      this.redisClient.unsubscribe(channelToUnsub);
     }
-    console.log("User unsubscribed to channel :", subscription);
+    console.log("User unsubscribed to channel :", channelToUnsub);
   }
 
   startRedisListener(channel: string, message: string) {

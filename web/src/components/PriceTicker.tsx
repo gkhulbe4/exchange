@@ -6,8 +6,14 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { SiSolana } from "react-icons/si";
 import { LuDollarSign } from "react-icons/lu";
+import { useNavigate } from "react-router-dom";
+import {
+  formatCoinImg,
+  formatCoinLogo,
+  formatCoinName,
+} from "@/lib/utils/format";
 
-const PriceTicker = () => {
+const PriceTicker = ({ market }: { market: string }) => {
   const {
     setUserId,
     refetchUserBalance,
@@ -17,6 +23,9 @@ const PriceTicker = () => {
     userBalance,
   } = useWebSocket();
   const [userIdEntered, setUserIdEntered] = useState("");
+  const navigate = useNavigate();
+  const baseAsset = market.split("_")[0];
+  const CoinLogo = formatCoinLogo(baseAsset);
 
   async function signIn() {
     if (userIdEntered.length == 0) {
@@ -32,10 +41,10 @@ const PriceTicker = () => {
 
   async function signOut() {
     setUserId(null);
-    setUserBalance({
-      INR: null,
-      SOL: null,
-    });
+    setUserBalance((prev) => ({
+      ...prev,
+      [baseAsset]: null,
+    }));
     localStorage.removeItem("userId");
     toast.success("User signed out successfully");
   }
@@ -47,15 +56,17 @@ const PriceTicker = () => {
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-black">
               <img
-                src="https://i.pinimg.com/736x/bd/f5/06/bdf5066589b7865a55d6790c210dba6d.jpg"
-                alt="SOL"
+                src={formatCoinImg(baseAsset)}
+                alt={baseAsset}
                 className="w-full h-full object-cover"
               />
             </div>
 
             <div>
-              <div className="font-semibold text-sm">SOL/USD</div>
-              <div className="text-xs text-muted-foreground">Solana</div>
+              <div className="font-semibold text-sm">{market}</div>
+              <div className="text-xs text-muted-foreground">
+                {formatCoinName(baseAsset)}
+              </div>
             </div>
           </div>
         </div>
@@ -116,12 +127,21 @@ const PriceTicker = () => {
         )}
         {userId && (
           <>
+            <Button
+              variant="outline"
+              size="sm"
+              className={`flex-1 bg-[#070707] text-muted-foreground font-medium`}
+              onClick={() => navigate("/orders")}
+            >
+              My Orders
+            </Button>
             <div className="flex justify-center gap-5 items-center border border-input px-3 py-2 rounded-md bg-[#070707]">
               <p className="text-sm text-muted-foreground font-extralight flex justify-center items-center gap-2">
-                <LuDollarSign size={18} /> {userBalance?.INR?.toLocaleString()}
+                <LuDollarSign size={18} /> {userBalance?.USD?.toLocaleString()}
               </p>
               <p className="text-sm text-muted-foreground font-extralight flex justify-center items-center gap-2">
-                <SiSolana /> {userBalance?.SOL?.toLocaleString()}
+                <CoinLogo />
+                {userBalance[baseAsset]?.toLocaleString()}
               </p>
             </div>
             <div className="flex justify-center items-center border border-input px-3 py-2 rounded-md bg-[#070707]">

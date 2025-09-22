@@ -25,10 +25,6 @@ class UserManager {
     getUser(userId) {
         return this.users.get(userId);
     }
-    getRandomClientId() {
-        return (Math.random().toString(36).substring(2, 15) +
-            Math.random().toString(36).substring(2, 15));
-    }
 }
 exports.UserManager = UserManager;
 //# sourceMappingURL=UserManager.js.map

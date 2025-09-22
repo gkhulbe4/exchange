@@ -6,18 +6,20 @@ import { addTradeInDb } from "./lib/addTradeInDb";
 import { getTickerDataFromDb } from "./lib/getTickerDatafromDb";
 import { getKlineDataFromDb } from "./lib/getKlineDataFromDb";
 import { handleOrderInDb } from "./lib/handleOrderInDb";
+import { getUserOrdersFromDb } from "./lib/getUserOrdersFromDb";
 
 export async function main() {
   await initialiseViews();
   const redisClient = new Redis();
-  // console.log("In DB:");
 
   while (true) {
     const res = await redisClient.rpop("dbMessage");
-    if (res) {
-      const message = JSON.parse(res);
-      // console.log("Message in DB:", message);
-      if (message.type == "ADD_TRADE") {
+    if (!res) continue;
+
+    const message = JSON.parse(res);
+
+    switch (message.type) {
+      case "ADD_TRADE":
         await addTradeInDb(
           message.data.id,
           message.data.market,
@@ -27,19 +29,42 @@ export async function main() {
           message.data.price,
           message.data.qty
         );
-      } else if ((message.type = "ADD_ORDER")) {
+        break;
+
+      case "ADD_ORDER":
         console.log(message);
-        await handleOrderInDb(message.data.order, message.data.fills);
-      } else if (message.type == "trades") {
-        const data = await getTradesFromDb();
+        await handleOrderInDb(message?.data?.order, message?.data?.fills);
+        break;
+
+      case "trades": {
+        const data = await getTradesFromDb(message.market);
         redisClient.publish("trades", JSON.stringify(data));
-      } else if (message.type == "ticker") {
-        const data = await getTickerDataFromDb();
-        redisClient.publish("ticker", JSON.stringify(data));
-      } else if (message.type == "kline") {
-        const data = await getKlineDataFromDb(message.timeFrame);
-        redisClient.publish("kline", JSON.stringify(data));
+        break;
       }
+
+      case "ticker": {
+        const data = await getTickerDataFromDb(message.market);
+        redisClient.publish("ticker", JSON.stringify(data));
+        break;
+      }
+
+      case "kline": {
+        const data = await getKlineDataFromDb(
+          message.timeFrame,
+          message.market
+        );
+        redisClient.publish("kline", JSON.stringify(data));
+        break;
+      }
+
+      case "userOrdersFromDb": {
+        const data = await getUserOrdersFromDb(message.userId);
+        redisClient.publish("userOrdersFromDb", JSON.stringify(data));
+        break;
+      }
+
+      default:
+        console.warn(`Unhandled message type: ${message.type}`);
     }
   }
 }

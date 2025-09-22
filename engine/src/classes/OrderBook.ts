@@ -14,7 +14,7 @@ export class OrderBook {
   bids: Order[];
   asks: Order[];
   baseAsset: string;
-  quoteAsset = "INR";
+  quoteAsset = "USD";
   lastTradeId: number;
   currentPrice: number;
 

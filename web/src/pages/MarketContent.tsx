@@ -4,10 +4,10 @@ import OrderBook from "@/components/OrderBook";
 import RecentTrades from "@/components/RecentTrades";
 import OrderPanel from "@/components/OrderPanel";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { useWebSocket } from "@/context/WebSocketContext";
 import UserOrders from "@/components/UserOrders";
+import { useWebSocket } from "@/context/WebSocketContext";
 
-const Index = () => {
+function MarketContent({ market }: { market: string }) {
   const { userId } = useWebSocket();
 
   return (
@@ -15,7 +15,7 @@ const Index = () => {
       <div className={`h-1 ${userId ? "bg-buy" : "bg-sell"}`} />
 
       <div className="p-2">
-        <PriceTicker />
+        <PriceTicker market={market} />
       </div>
 
       <div className="flex flex-1 gap-2 p-2 overflow-hidden max-h-[500px]">
@@ -38,7 +38,6 @@ const Index = () => {
                 </TabsTrigger>
               </TabsList>
 
-              {/* Tabs body should fill available height */}
               <div className="flex-1 overflow-hidden">
                 <TabsContent
                   value="orderBook"
@@ -60,7 +59,7 @@ const Index = () => {
 
         <div className="w-72 bg-card rounded-lg border border-border flex flex-col overflow-hidden">
           <div className="flex-1 overflow-y-auto p-2">
-            <OrderPanel />
+            <OrderPanel market={market} />
           </div>
         </div>
       </div>
@@ -70,6 +69,6 @@ const Index = () => {
       </div>
     </div>
   );
-};
+}
 
-export default Index;
+export default MarketContent;
