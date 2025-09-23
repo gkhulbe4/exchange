@@ -7,17 +7,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useWebSocket } from "@/context/WebSocketContext";
 import { fetchUserOrdersFromDb } from "@/lib/utils/fetchUserOrdersFromDb";
 import { useQuery } from "@tanstack/react-query";
 import { Clock, Info, TrendingUp } from "lucide-react";
 import { useMemo, useState } from "react";
 
 function Orders() {
-  // const { userId, isConnected } = useWebSocket();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [marketFilter, setMarketFilter] = useState<string>("all");
-  // console.log(userId, "in orderssssssss");
   const userId = localStorage.getItem("userId");
 
   const { data, isLoading } = useQuery({
@@ -58,8 +55,6 @@ function Orders() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* <div className={`h-1 ${isConnected ? "bg-buy" : "bg-sell"}`} /> */}
-
       <div className="container mx-auto p-4">
         <Card className="w-full">
           <CardHeader className="sticky top-0 bg-background z-20 border-b">
@@ -123,7 +118,7 @@ function Orders() {
                   </div>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
+                <div className="overflow-y-auto max-h-[600px]">
                   <table className="w-full">
                     <thead className="sticky top-0 bg-background z-10">
                       <tr className="border-b bg-muted/50">

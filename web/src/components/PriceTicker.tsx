@@ -4,7 +4,6 @@ import { Button } from "./ui/button";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import { SiSolana } from "react-icons/si";
 import { LuDollarSign } from "react-icons/lu";
 import { useNavigate } from "react-router-dom";
 import {
