@@ -1,9 +1,17 @@
 import axios from "axios";
 
 export async function fetchUserBalance(userId: string) {
-  const res = await axios.get(
-    `http://localhost:3001/api/v1/user/getBalance?userId=${userId}`
-  );
-  //   console.log(res.data.response);
-  return res.data.response;
+  try {
+    const res = await axios.get(
+      `http://localhost:3001/api/v1/user/getBalance?userId=${userId}`
+    );
+    if (res.status == 200) {
+      return res.data.response;
+    } else {
+      throw new Error();
+    }
+    //   console.log(res.data.response);
+  } catch (error) {
+    console.log("Error in fetching user balance", error);
+  }
 }

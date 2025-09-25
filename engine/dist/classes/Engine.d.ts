@@ -12,16 +12,17 @@ export declare class Engine {
     handleDbOrder(order: FinalOrder, fills: Fill[]): void;
     publishWsTrades(fills: Fill[], userId: string, market: string, side: string, orderId: string): void;
     publishWsOrder(order: {
-        baseAsset: string;
-        quoteAsset: string;
-        side: "buy" | "sell";
-        price: number;
-        quantity: number;
-        userId: string;
+        baseAsset?: string;
+        quoteAsset?: string;
+        side?: "buy" | "sell";
+        price?: number;
+        quantity?: number;
+        userId?: string;
         orderId: string;
-        filled: number;
-        market: string;
+        filled?: number;
+        market?: string;
     } | null): void;
+    publishWsCancelOrder(orderId: string, market: string, side: string): void;
     createOrder(orderDetails: OrderDetails): {
         executedQuantity: number;
         fills: Fill[];

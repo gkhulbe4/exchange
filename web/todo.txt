@@ -6,17 +6,36 @@
 
 - make a users order page where he can see all his orders. User should be able to filter them // done
 
-- Add 2 more markets // on this
+- Add 2 more markets // done
 
-- Fix the crashing on entering unknown user ID
+- Make a landing page where all markets can be seen // done
 
-- Make a landing page where all markets can be seen
+- Fix the crashing on entering unknown user ID // done
 
-- cancel orders
+- cancel orders // done
+
+- show info about 3 markets at homepage
+
+- make mm better
 
 - add new candle in real time 
 
 - show upcoming candle price fluctuation in real time in chart
+
+
+
+
+- dsa assignment
+- read file , read file sync 
+- home page of zenithX
+
+
+
+- react and tailwind fundamentals
+- react hooks and custom hooks
+- frontend optimization 
+- SEO optimization
+- redux and zustand
 
 
 

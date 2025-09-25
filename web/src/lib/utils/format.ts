@@ -64,3 +64,24 @@ export function formatCoinLogo(baseAsset: string) {
       return MdError;
   }
 }
+
+export function formatCoinPrice(price: number) {
+  if (price >= 1000) {
+    return `$${(price * 83).toLocaleString("en-IN", {
+      maximumFractionDigits: 0,
+    })}`;
+  } else if (price >= 1) {
+    return `$${(price * 83).toFixed(2)}`;
+  } else {
+    return `$${(price * 83).toFixed(4)}`;
+  }
+}
+
+export function formatVolume(volume: number) {
+  if (volume >= 1000000) {
+    return `$${((volume * 83) / 1000000).toFixed(1)}M`;
+  } else if (volume >= 1000) {
+    return `$${((volume * 83) / 1000).toFixed(1)}K`;
+  }
+  return `$${(volume * 83).toFixed(0)}`;
+}

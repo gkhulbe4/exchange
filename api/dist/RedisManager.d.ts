@@ -13,6 +13,7 @@ export declare class RedisManager {
     getKlineData(timeFrame: string, market: string): Promise<unknown>;
     getUserOrders(userId: string, market: string): Promise<unknown>;
     getUserOrdersFromDb(userId: string): Promise<unknown>;
+    getAllMarketsCurrentPrice(): Promise<unknown>;
     getRandomClientId(): string;
 }
 //# sourceMappingURL=RedisManager.d.ts.map

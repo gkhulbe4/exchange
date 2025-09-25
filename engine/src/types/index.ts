@@ -1,13 +1,23 @@
-export type MessageFromApi = {
-  type: "CREATE_ORDER";
-  data: {
-    market: string;
-    side: "buy" | "sell";
-    quantity: number;
-    price: number;
-    userId: string;
-  };
-};
+export type MessageFromApi =
+  | {
+      type: "CREATE_ORDER";
+      data: {
+        market: string;
+        side: "buy" | "sell";
+        quantity: number;
+        price: number;
+        userId: string;
+      };
+    }
+  | {
+      type: "CANCEL_ORDER";
+      data: {
+        market: string;
+        side: "buy" | "sell";
+        orderId: string;
+        userId: string;
+      };
+    };
 
 export type OrderDetails = {
   market: string;
@@ -53,7 +63,7 @@ export type DBMessage =
       };
     }
   | {
-      type: "ORDER_PLACED" | "ORDERED_CANCELLED";
+      type: "ORDER_PLACED" | "ERROR_WHILE_PLACING_ORDER";
       data: {
         orderId: string;
         executedQuantity: number;
@@ -63,6 +73,12 @@ export type DBMessage =
   | {
       type: "ADD_ORDER";
       data: { order: FinalOrder; fills: Fill[] };
+    }
+  | {
+      type: "CANCEL_ORDER";
+      data: {
+        orderId: string;
+      };
     };
 
 export type PublishToWS =
@@ -82,15 +98,24 @@ export type PublishToWS =
     }
   | {
       stream: "order";
-      data: {
-        e: string; // event
-        o: string; // orderId
-        f: number; // fill
-        p: number; // price
-        q: number; // quantity
-        s: string; // side
-        m: string; // market
-        u: string;
-        // T: number; // time mp
-      };
+      data:
+        | {
+            // this is for placed orders
+            e: string; // event
+            o: string; // orderId
+            f: number; // fill
+            p: number; // price
+            q: number; // quantity
+            s: string; // side
+            m: string; // market
+            u: string;
+            // T: number; // time mp
+          }
+        | {
+            // this is for cancel_order
+            e: string;
+            o: string;
+            m: string;
+            s: string;
+          };
     };

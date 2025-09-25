@@ -4,6 +4,7 @@ import axios from "axios";
 import CandleChart from "./CandleChart";
 import { Kline } from "@/lib/types";
 import { useParams } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 
 const TradingChart = () => {
   const [timeFrame, setTimeFrame] = useState("15m");
@@ -56,7 +57,7 @@ const TradingChart = () => {
           <CandleChart chartData={chartData} />
         ) : (
           <div className="h-full flex items-center justify-center text-muted-foreground">
-            Loading chart...
+            <Loader2 className="animate-spin" />
           </div>
         )}
       </div>

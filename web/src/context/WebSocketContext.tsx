@@ -15,7 +15,6 @@ import {
   useRef,
   useCallback,
 } from "react";
-import { useParams } from "react-router-dom";
 
 export type AggregatedOrder = {
   price: number;
@@ -363,57 +362,74 @@ function WebSocketProvider({
               .filter((o) => o.filled < o.quantity)
           );
         } else if (message.stream === "order") {
-          const orderData = message.data;
+          if (message.data.e === "order") {
+            const orderData = message.data;
 
-          const order: RawOrder =
-            orderData.e === "order"
-              ? {
-                  orderId: orderData.o,
-                  price: orderData.p,
-                  quantity: orderData.q,
-                  filled: orderData.f,
-                  side: orderData.s,
-                  market: orderData.m,
-                  baseAsset: orderData.baseAsset || "SOL",
-                  quoteAsset: orderData.quoteAsset || "INR",
-                  userId: orderData.u || "",
-                }
-              : orderData;
+            const order: RawOrder =
+              orderData.e === "order"
+                ? {
+                    orderId: orderData.o,
+                    price: orderData.p,
+                    quantity: orderData.q,
+                    filled: orderData.f,
+                    side: orderData.s,
+                    market: orderData.m,
+                    baseAsset: orderData.baseAsset || "SOL",
+                    quoteAsset: orderData.quoteAsset || "INR",
+                    userId: orderData.u || "",
+                  }
+                : orderData;
 
-          // Update user orders if this belongs to current user
-          if (order.userId === userIdRef.current) {
-            const currentUserOrders = userOrdersRef.current;
-            const sideKey = order.side === "sell" ? "asks" : "bids";
-            const updatedOrders = {
-              ...currentUserOrders,
-              [sideKey]: [...currentUserOrders[sideKey], order],
-            };
+            // Update user orders if this belongs to current user
+            if (order.userId === userIdRef.current) {
+              const currentUserOrders = userOrdersRef.current;
+              const sideKey = order.side === "sell" ? "asks" : "bids";
+              const updatedOrders = {
+                ...currentUserOrders,
+                [sideKey]: [...currentUserOrders[sideKey], order],
+              };
 
-            setUserOrders(updatedOrders);
-            userOrdersRef.current = updatedOrders;
+              setUserOrders(updatedOrders);
+              userOrdersRef.current = updatedOrders;
 
-            // Refresh balance after new order
-            setTimeout(() => refreshBalance(), 100);
-          }
-
-          // Update raw orders
-          setRawOrders((prev) => {
-            if (order.filled >= order.quantity) {
-              return prev.filter((o) => o.orderId !== order.orderId);
+              // Refresh balance after new order
+              setTimeout(() => refreshBalance(), 100);
             }
 
-            const existingIndex = prev.findIndex(
-              (o) => o.orderId === order.orderId
-            );
+            // Update raw orders
+            setRawOrders((prev) => {
+              if (order.filled >= order.quantity) {
+                return prev.filter((o) => o.orderId !== order.orderId);
+              }
 
-            if (existingIndex !== -1) {
-              const updated = [...prev];
-              updated[existingIndex] = order;
+              const existingIndex = prev.findIndex(
+                (o) => o.orderId === order.orderId
+              );
+
+              if (existingIndex !== -1) {
+                const updated = [...prev];
+                updated[existingIndex] = order;
+                return updated;
+              }
+
+              return [...prev, order];
+            });
+          } else if (message.data.e === "cancel_order") {
+            console.log("I am here");
+            const { o: orderId, s: side } = message.data;
+            setUserOrders((prev) => {
+              const updated = { ...prev };
+              const sideKey = side === "buy" ? "bids" : "asks";
+              updated[sideKey] = updated[sideKey].filter(
+                (order) => order.orderId !== orderId
+              );
               return updated;
-            }
-
-            return [...prev, order];
-          });
+            });
+            setRawOrders((prev) =>
+              prev.filter((order) => order.orderId !== orderId)
+            );
+            refreshBalance();
+          }
         }
       } catch (error) {
         console.error("WebSocket message error:", error);

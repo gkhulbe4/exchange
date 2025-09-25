@@ -12,6 +12,8 @@ const getTickerDatafromDb_1 = require("./lib/getTickerDatafromDb");
 const getKlineDataFromDb_1 = require("./lib/getKlineDataFromDb");
 const handleOrderInDb_1 = require("./lib/handleOrderInDb");
 const getUserOrdersFromDb_1 = require("./lib/getUserOrdersFromDb");
+const cancelOrderInDb_1 = require("./lib/cancelOrderInDb");
+const getAllMarketsCurrentPrice_1 = require("./lib/getAllMarketsCurrentPrice");
 async function main() {
     await (0, initialiseViews_1.initialiseViews)();
     const redisClient = new ioredis_1.default();
@@ -25,8 +27,12 @@ async function main() {
                 await (0, addTradeInDb_1.addTradeInDb)(message.data.id, message.data.market, message.data.buyer_id, message.data.seller_id, message.data.side, message.data.price, message.data.qty);
                 break;
             case "ADD_ORDER":
-                console.log(message);
+                // console.log(message);
                 await (0, handleOrderInDb_1.handleOrderInDb)(message?.data?.order, message?.data?.fills);
+                break;
+            case "CANCEL_ORDER":
+                console.log("Cancelling order: ", message?.data);
+                (0, cancelOrderInDb_1.cancelOrderInDb)(message?.data?.orderId);
                 break;
             case "trades": {
                 const data = await (0, getTradesFromDb_1.getTradesFromDb)(message.market);
@@ -46,6 +52,11 @@ async function main() {
             case "userOrdersFromDb": {
                 const data = await (0, getUserOrdersFromDb_1.getUserOrdersFromDb)(message.userId);
                 redisClient.publish("userOrdersFromDb", JSON.stringify(data));
+                break;
+            }
+            case "allMarketsCurrentPrice": {
+                const data = await (0, getAllMarketsCurrentPrice_1.getAllMarketsCurrentPrice)();
+                redisClient.publish("allMarketsCurrentPrice", JSON.stringify(data));
                 break;
             }
             default:

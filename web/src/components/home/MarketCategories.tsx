@@ -12,7 +12,18 @@ interface MarketData {
   volume24h: number;
 }
 
-const MarketCategories = () => {
+const MarketCategories = ({
+  btcPrice,
+  ethPrice,
+  solPrice,
+  isLoading,
+}: {
+  btcPrice: number;
+  ethPrice: number;
+  solPrice: number;
+  isLoading: boolean;
+}) => {
+  console.log(btcPrice, ethPrice, solPrice);
   const newTokens: MarketData[] = [
     {
       symbol: "SWTCH",
@@ -93,21 +104,21 @@ const MarketCategories = () => {
     {
       symbol: "SOL",
       name: "Solana",
-      price: 221.45,
+      price: solPrice ?? 221.45,
       change24h: -7.14,
       volume24h: 12340000,
     },
     {
       symbol: "ETH",
       name: "Ethereum",
-      price: 4176.73,
+      price: isLoading ? 4176.73 : ethPrice,
       change24h: -6.95,
       volume24h: 23450000,
     },
     {
       symbol: "BTC",
       name: "Bitcoin",
-      price: 112897.1,
+      price: isLoading ? 112897.1 : btcPrice,
       change24h: -2.32,
       volume24h: 45670000,
     },
@@ -129,13 +140,13 @@ const MarketCategories = () => {
 
   const formatPrice = (price: number) => {
     if (price >= 1000) {
-      return `₹${(price * 83).toLocaleString("en-IN", {
+      return `$${(price * 83).toLocaleString("en-IN", {
         maximumFractionDigits: 0,
       })}`;
     } else if (price >= 1) {
-      return `₹${(price * 83).toFixed(2)}`;
+      return `$${(price * 83).toFixed(2)}`;
     } else {
-      return `₹${(price * 83).toFixed(4)}`;
+      return `$${(price * 83).toFixed(4)}`;
     }
   };
 

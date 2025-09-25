@@ -24,7 +24,7 @@ const Hero = () => {
     {
       title: "Cash Rewards",
       subtitle:
-        "Generate volume to level up and earn up to ₹32L in cash rewards.",
+        "Generate volume to level up and earn up to $32k in cash rewards.",
       cta: "View Rewards",
       bgGradient: "from-buy to-buy-light",
       image: "https://d2hpp4ok8w7j4q.cloudfront.net/assets/Blog-Banner7.jpg",

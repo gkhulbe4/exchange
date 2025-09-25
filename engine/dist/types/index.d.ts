@@ -7,6 +7,14 @@ export type MessageFromApi = {
         price: number;
         userId: string;
     };
+} | {
+    type: "CANCEL_ORDER";
+    data: {
+        market: string;
+        side: "buy" | "sell";
+        orderId: string;
+        userId: string;
+    };
 };
 export type OrderDetails = {
     market: string;
@@ -47,7 +55,7 @@ export type DBMessage = {
         side: string;
     };
 } | {
-    type: "ORDER_PLACED" | "ORDERED_CANCELLED";
+    type: "ORDER_PLACED" | "ERROR_WHILE_PLACING_ORDER";
     data: {
         orderId: string;
         executedQuantity: number;
@@ -58,6 +66,11 @@ export type DBMessage = {
     data: {
         order: FinalOrder;
         fills: Fill[];
+    };
+} | {
+    type: "CANCEL_ORDER";
+    data: {
+        orderId: string;
     };
 };
 export type PublishToWS = {
@@ -84,6 +97,11 @@ export type PublishToWS = {
         s: string;
         m: string;
         u: string;
+    } | {
+        e: string;
+        o: string;
+        m: string;
+        s: string;
     };
 };
 //# sourceMappingURL=index.d.ts.map

@@ -26,7 +26,6 @@ class OrderBook {
         console.log("Bids: ", this.bids);
         console.log("Asks: ", this.asks);
     }
-    // prevent self trade in matchAsk and matchBid
     addOrder(order) {
         let remainingOrder = null;
         const { executedQuantity, fills } = order.side === "buy"
@@ -35,6 +34,7 @@ class OrderBook {
         order.filled = executedQuantity;
         if (executedQuantity < order.quantity) {
             remainingOrder = { ...order }; // not fully executed
+            // console.log("FILLS ARRAY ------> ", fills);
             if (order.side === "buy") {
                 this.bids.push(remainingOrder);
                 this.sortBids();
@@ -43,10 +43,10 @@ class OrderBook {
                 this.asks.push(remainingOrder);
                 this.sortAsks();
             }
-            console.log("📌 Order added to book:", remainingOrder);
+            console.log("Order added to book:", remainingOrder);
         }
         else {
-            console.log("✅ Fully executed order, not added to book.");
+            console.log("Fully executed order, not added to book.");
         }
         return { executedQuantity, fills, remainingOrder };
     }
@@ -76,7 +76,7 @@ class OrderBook {
                     marketOrderId: ask.orderId,
                     time: Date.now(),
                 });
-                console.log(`🤝 Matched BUY ${filled} @ ${ask.price}`);
+                console.log(`Matched BUY ${filled} @ ${ask.price}`);
             }
         }
         this.asks = this.asks.filter((ask) => ask.filled < ask.quantity);
@@ -102,7 +102,7 @@ class OrderBook {
                     marketOrderId: bid.orderId,
                     time: Date.now(),
                 });
-                console.log(`🤝 Matched SELL ${filled} @ ${bid.price}`);
+                console.log(`Matched SELL ${filled} @ ${bid.price}`);
             }
         }
         this.bids = this.bids.filter((bid) => bid.filled < bid.quantity);

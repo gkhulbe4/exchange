@@ -226,15 +226,15 @@ export class Engine {
 
   publishWsOrder(
     order: {
-      baseAsset: string;
-      quoteAsset: string;
-      side: "buy" | "sell";
-      price: number;
-      quantity: number;
-      userId: string;
+      baseAsset?: string;
+      quoteAsset?: string;
+      side?: "buy" | "sell";
+      price?: number;
+      quantity?: number;
+      userId?: string;
       orderId: string;
-      filled: number;
-      market: string;
+      filled?: number;
+      market?: string;
     } | null
   ) {
     console.log("Publishing Order");
@@ -249,6 +249,19 @@ export class Engine {
         q: order?.quantity as number,
         s: order?.side as string,
         u: order?.userId as string,
+      },
+    });
+  }
+
+  publishWsCancelOrder(orderId: string, market: string, side: string) {
+    console.log("Publishing to Cancel Order");
+    RedisManager.getInstance().publishToWs(`order.${market}`, {
+      stream: "order",
+      data: {
+        e: "cancel_order",
+        o: orderId,
+        m: market,
+        s: side,
       },
     });
   }
@@ -368,7 +381,7 @@ export class Engine {
       } catch (error) {
         console.log("ERROR CAME WHILE PLACING AN ORDER", error);
         RedisManager.getInstance().sendToApi(clientId, {
-          type: "ORDERED_CANCELLED",
+          type: "ERROR_WHILE_PLACING_ORDER",
           data: {
             orderId: "",
             executedQuantity: 0,
@@ -376,6 +389,73 @@ export class Engine {
           },
         });
       }
+    } else if (message.type == "CANCEL_ORDER") {
+      const { market, side, orderId, userId } = message.data;
+      const baseAsset = market.split("_")[0] as baseAssets;
+      const orderbook = this.orderbooks.find((o) => o.baseAsset == baseAsset);
+
+      //checking whether the orderbook exists or not
+      if (!orderbook) {
+        throw new Error("Orderbook not found!");
+      }
+      const parsedSide = side == "buy" ? "bids" : "asks";
+      const sideOrders: Order[] = orderbook[parsedSide];
+      const order = sideOrders.find((o) => o.orderId == orderId);
+      const userBalance = this.balances.get(userId);
+
+      if (!userBalance) {
+        throw new Error("User balance not found!");
+      }
+
+      // checking if user id is same or not , if not , then error
+      if (userId != order?.userId) {
+        throw new Error("Not the owner of the order!");
+      }
+
+      // console.log("ORDER: ", order);
+      // console.log("ORDER OWNER BALANCE: ", this.balances.get(userId));
+
+      const remainingQuantity = order.quantity - order.filled;
+
+      // if 'buy' then change in USD , if 'sell' then change in SOL/BTC/ETH
+      if (side == "buy") {
+        userBalance.USD.available += remainingQuantity * order.price;
+        userBalance.USD.locked -= remainingQuantity * order.price;
+      } else if (side == "sell") {
+        userBalance[baseAsset].available += remainingQuantity;
+        userBalance[baseAsset].locked -= remainingQuantity;
+      }
+
+      // console.log(
+      //   "ORDER OWNER BALANCE AFTER CANCELLING: ",
+      //   this.balances.get(userId)
+      // );
+
+      const orderIndex = sideOrders.findIndex((o) => o.orderId == orderId);
+      if (orderIndex != -1) {
+        sideOrders.splice(orderIndex, 1);
+      }
+
+      // sending back to API server
+      RedisManager.getInstance().sendToApi(clientId, {
+        type: "CANCEL_ORDER",
+        data: {
+          orderId: orderId,
+        },
+      });
+
+      // sending DB call
+      RedisManager.getInstance().sendDbCalls({
+        type: "CANCEL_ORDER",
+        data: {
+          orderId: orderId,
+        },
+      });
+
+      this.publishWsCancelOrder(orderId, market, side);
+    } else {
+      console.log("UNKNOWN OPERATION");
+      return;
     }
   }
 

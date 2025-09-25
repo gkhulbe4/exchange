@@ -30,7 +30,7 @@ function Orders() {
     return Array.from(uniqueMarkets);
   }, [data]);
 
-  const statuses = ["Open", "Partial", "Filled"];
+  const statuses = ["Open", "Partial", "Filled", "Cancelled"];
 
   const filteredOrders = useMemo(() => {
     if (!data?.response) return [];
@@ -145,6 +145,9 @@ function Orders() {
                         </th>
                         <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                           Time
+                        </th>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                          Action
                         </th>
                       </tr>
                     </thead>

@@ -14,6 +14,14 @@ export type MessageToEngine = {
         price: number;
         userId: number;
     };
+} | {
+    type: "CANCEL_ORDER";
+    data: {
+        market: string;
+        side: "buy" | "sell";
+        orderId: string;
+        userId: string;
+    };
 };
 export type MessageFromEngine = {
     type: "ORDER_PLACED" | "ORDER_CANCELLED";

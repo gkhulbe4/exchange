@@ -8,7 +8,7 @@ exports.userRouter.get("/getBalance", async (req, res) => {
     try {
         const userId = req.query.userId;
         if (!userId) {
-            res.status(400).json({ message: "User ID not found" });
+            res.status(400).json({ message: "User ID is missing" });
         }
         // console.log(`balance request received:${userId}`);
         const response = await RedisManager_1.RedisManager.getInstance().getUserBalance(userId);

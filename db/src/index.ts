@@ -7,6 +7,8 @@ import { getTickerDataFromDb } from "./lib/getTickerDatafromDb";
 import { getKlineDataFromDb } from "./lib/getKlineDataFromDb";
 import { handleOrderInDb } from "./lib/handleOrderInDb";
 import { getUserOrdersFromDb } from "./lib/getUserOrdersFromDb";
+import { cancelOrderInDb } from "./lib/cancelOrderInDb";
+import { getAllMarketsCurrentPrice } from "./lib/getAllMarketsCurrentPrice";
 
 export async function main() {
   await initialiseViews();
@@ -32,8 +34,13 @@ export async function main() {
         break;
 
       case "ADD_ORDER":
-        console.log(message);
+        // console.log(message);
         await handleOrderInDb(message?.data?.order, message?.data?.fills);
+        break;
+
+      case "CANCEL_ORDER":
+        console.log("Cancelling order: ", message?.data);
+        cancelOrderInDb(message?.data?.orderId);
         break;
 
       case "trades": {
@@ -60,6 +67,12 @@ export async function main() {
       case "userOrdersFromDb": {
         const data = await getUserOrdersFromDb(message.userId);
         redisClient.publish("userOrdersFromDb", JSON.stringify(data));
+        break;
+      }
+
+      case "allMarketsCurrentPrice": {
+        const data = await getAllMarketsCurrentPrice();
+        redisClient.publish("allMarketsCurrentPrice", JSON.stringify(data));
         break;
       }
 

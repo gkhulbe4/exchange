@@ -37,7 +37,7 @@ class RedisManager {
     }
     async getUserBalance(userId) {
         // console.log("pushing to userBalance");
-        return new Promise(async (resolve) => {
+        return new Promise(async (resolve, reject) => {
             await this.pubClient.lpush("user", JSON.stringify({ type: "userBalance", userId: userId }));
             console.log(`Subscribing to userBalance:${userId}`);
             this.subClient.subscribe(`userBalance:${userId}`);
@@ -45,8 +45,12 @@ class RedisManager {
                 // console.log(channel, message);
                 if (channel == `userBalance:${userId}`) {
                     this.subClient.unsubscribe(`userBalance:${userId}`);
-                    console.log(message);
-                    resolve(JSON.parse(message));
+                    if (message) {
+                        resolve(JSON.parse(message));
+                    }
+                    else {
+                        reject();
+                    }
                 }
             });
         });
@@ -119,6 +123,18 @@ class RedisManager {
             this.subClient.on("message", (channel, message) => {
                 if (channel == "userOrdersFromDb") {
                     this.subClient.unsubscribe("userOrdersFromDb");
+                    resolve(JSON.parse(message));
+                }
+            });
+        });
+    }
+    getAllMarketsCurrentPrice() {
+        return new Promise(async (resolve) => {
+            this.subClient.subscribe("allMarketsCurrentPrice");
+            await this.pubClient.lpush("dbMessage", JSON.stringify({ type: "allMarketsCurrentPrice" }));
+            this.subClient.on("message", (channel, message) => {
+                if (channel == "allMarketsCurrentPrice") {
+                    this.subClient.unsubscribe("allMarketsCurrentPrice");
                     resolve(JSON.parse(message));
                 }
             });

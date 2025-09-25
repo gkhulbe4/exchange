@@ -59,4 +59,19 @@ exports.tradeRouter.get("/getKlineData", async (req, res) => {
         res.status(500).json({ message: "Error while fetching kline data", error });
     }
 });
+exports.tradeRouter.get("/getAllMarketCurrentPrices", async (req, res) => {
+    try {
+        const response = await RedisManager_1.RedisManager.getInstance().getAllMarketsCurrentPrice();
+        res.status(200).json({
+            message: "Fetched all market current prices successfully",
+            response,
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            message: "Error while fetching all market current prices",
+            error,
+        });
+    }
+});
 //# sourceMappingURL=trade.js.map

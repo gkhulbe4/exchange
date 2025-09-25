@@ -6,6 +6,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { FaBitcoin, FaEthereum } from "react-icons/fa";
 import { SiSolana } from "react-icons/si";
+import { formatCoinPrice, formatVolume } from "@/lib/utils/format";
 
 interface MarketData {
   symbol: string;
@@ -16,7 +17,17 @@ interface MarketData {
   openInterest?: number;
 }
 
-const MarketTable = () => {
+const MarketTable = ({
+  btcPrice,
+  ethPrice,
+  solPrice,
+  isLoading,
+}: {
+  btcPrice: number;
+  ethPrice: number;
+  solPrice: number;
+  isLoading: boolean;
+}) => {
   const [marketTab, setMarketTab] = useState("spot");
 
   const popularTokens: MarketData[] = [
@@ -100,27 +111,6 @@ const MarketTable = () => {
     },
   ];
 
-  const formatPrice = (price: number) => {
-    if (price >= 1000) {
-      return `₹${(price * 83).toLocaleString("en-IN", {
-        maximumFractionDigits: 0,
-      })}`;
-    } else if (price >= 1) {
-      return `₹${(price * 83).toFixed(2)}`;
-    } else {
-      return `₹${(price * 83).toFixed(4)}`;
-    }
-  };
-
-  const formatVolume = (volume: number) => {
-    if (volume >= 1000000) {
-      return `₹${((volume * 83) / 1000000).toFixed(1)}M`;
-    } else if (volume >= 1000) {
-      return `₹${((volume * 83) / 1000).toFixed(1)}K`;
-    }
-    return `₹${(volume * 83).toFixed(0)}`;
-  };
-
   const getTokenIcon = (symbol: string) => {
     if (symbol.includes("BTC")) {
       return <FaBitcoin className="w-8 h-8 text-yellow-500" />;
@@ -188,7 +178,7 @@ const MarketTable = () => {
                           </div>
                         </td>
                         <td className="text-right p-4 font-mono">
-                          {formatPrice(token.price)}
+                          {formatCoinPrice(token.price)}
                         </td>
                         <td className="text-right p-4 font-mono text-sm text-muted-foreground">
                           {formatVolume(token.volume24h)}
@@ -270,7 +260,7 @@ const MarketTable = () => {
                           </div>
                         </td>
                         <td className="text-right p-4 font-mono">
-                          {formatPrice(token.price)}
+                          {formatCoinPrice(token.price)}
                         </td>
                         <td className="text-right p-4 font-mono text-sm text-muted-foreground">
                           {formatVolume(token.volume24h)}

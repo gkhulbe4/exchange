@@ -37,6 +37,40 @@ exports.orderRouter.post("/", async (req, res) => {
         res.status(500).json({ message: "Error while ordering", error });
     }
 });
+exports.orderRouter.post("/cancelOrder", async (req, res) => {
+    const { orderId, market, userId, side } = req.body;
+    if (!orderId) {
+        res.status(404).json({ message: "Order ID is missing" });
+    }
+    if (!market) {
+        res.status(404).json({ message: "Market is missing" });
+    }
+    if (!userId) {
+        res.status(404).json({ message: "User ID is missing" });
+    }
+    if (!side) {
+        res.status(404).json({ message: "Side is missing" });
+    }
+    try {
+        const response = await RedisManager_1.RedisManager.getInstance().sendAndAwait({
+            type: "CANCEL_ORDER",
+            data: {
+                market: market,
+                orderId: orderId,
+                side: side,
+                userId: userId,
+            },
+        });
+        res
+            .status(200)
+            .json({ message: "Order cancelled successfully", response: response });
+    }
+    catch (error) {
+        res
+            .status(500)
+            .json({ message: "Error while  cancelling the ordering", error });
+    }
+});
 exports.orderRouter.get("/getOrders", async (req, res) => {
     const market = req.query.market;
     if (!market) {
