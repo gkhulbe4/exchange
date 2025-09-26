@@ -36,6 +36,6 @@
 - frontend optimization 
 - SEO optimization
 - redux and zustand
-
+- error boundary and portal
 
 

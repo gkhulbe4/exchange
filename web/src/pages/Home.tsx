@@ -20,15 +20,15 @@ const Home = () => {
       <Header />
       <Hero />
       <MarketCategories
-        btcPrice={
+        btcPrice={Number(
           data?.response?.find((m) => m.market === "BTC_USD")?.current_price
-        }
-        solPrice={
+        )}
+        solPrice={Number(
           data?.response?.find((m) => m.market === "SOL_USD")?.current_price
-        }
-        ethPrice={
+        )}
+        ethPrice={Number(
           data?.response?.find((m) => m.market === "ETH_USD")?.current_price
-        }
+        )}
         isLoading={isLoading}
       />
       <MarketTable
