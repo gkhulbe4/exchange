@@ -3,7 +3,7 @@ import { Engine } from "./classes/Engine";
 
 async function startEngine() {
   const engine = new Engine();
-  const redisClient = new Redis();
+  const redisClient = new Redis(process.env.REDIS_URL as string);
 
   while (true) {
     const response = await redisClient.brpop("message", "user", 0);
