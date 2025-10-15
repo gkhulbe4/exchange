@@ -1,5 +1,6 @@
 import Redis from "ioredis";
 import { DBMessage, PublishToWS } from "../types";
+import "dotenv/config";
 
 export class RedisManager {
   private static instance: RedisManager;
