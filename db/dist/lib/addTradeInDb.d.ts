@@ -1,2 +1,0 @@
-export declare function addTradeInDb(id: string, market: string, buyer_id: string, seller_id: string, side: string, price: string, qty: number): Promise<void>;
-//# sourceMappingURL=addTradeInDb.d.ts.map
