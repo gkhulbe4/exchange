@@ -1,5 +1,6 @@
 import Redis from "ioredis";
 import { MessageFromEngine, MessageToEngine } from "./types";
+import "dotenv/config";
 
 export class RedisManager {
   private static instance: RedisManager;
@@ -8,8 +9,9 @@ export class RedisManager {
   private pubClient: Redis;
 
   constructor() {
-    this.subClient = new Redis();
-    this.pubClient = new Redis();
+    const redisUrl = process.env.REDIS_URL as string;
+    this.subClient = new Redis(redisUrl);
+    this.pubClient = new Redis(redisUrl);
   }
 
   static getInstance() {

@@ -1,2 +1,5 @@
 **/.env
 # removes env files fromm all folders
+
+**/node_modules
+**/dist

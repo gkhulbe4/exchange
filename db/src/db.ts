@@ -6,5 +6,6 @@ export const pool = new Pool({
   host: process.env.PGHOST,
   database: process.env.PGDATABASE,
   password: process.env.PGPASSWORD,
-  port: 5433,
+  port: Number(process.env.PGPORT),
+  ssl: process.env.PGSSL === "true" ? { rejectUnauthorized: false } : false,
 });

@@ -15,7 +15,9 @@ const TradingChart = () => {
     async function getChartData() {
       try {
         const res = await axios.get(
-          `http://localhost:3001/api/v1/trade/getKlineData?timeFrame=${timeFrame}&market=${market}`
+          `${
+            import.meta.env.VITE_API_URL
+          }api/v1/trade/getKlineData?timeFrame=${timeFrame}&market=${market}`
         );
         const data: Kline[] = res.data.response;
         // console.log(data);

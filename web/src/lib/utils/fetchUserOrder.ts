@@ -12,7 +12,9 @@ export async function fetchUserOrder(userId: string, market: string) {
   }
   try {
     const res = await axios.get(
-      `http://localhost:3001/api/v1/order/getUserOrders?userId=${userId}&market=${market}`
+      `${
+        import.meta.env.VITE_API_URL
+      }api/v1/order/getUserOrders?userId=${userId}&market=${market}`
     );
     return res.data;
   } catch (error) {

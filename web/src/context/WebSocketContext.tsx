@@ -274,8 +274,8 @@ function WebSocketProvider({
     if (!userIdRef.current) return;
 
     const wsUrl = userId
-      ? `ws://localhost:8080?userId=${userId}`
-      : `ws://localhost:8080`;
+      ? `${import.meta.env.VITE_WS_URL}?userId=${userId}`
+      : `${import.meta.env.VITE_WS_URL}`;
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {

@@ -4,7 +4,9 @@ export async function fetchTickerData(market: string) {
   try {
     // console.log("i am in fetchTickerData");
     const res = await axios.get(
-      `http://localhost:3001/api/v1/trade/getTickerData?market=${market}`
+      `${
+        import.meta.env.VITE_API_URL
+      }api/v1/trade/getTickerData?market=${market}`
     );
     const data = res.data;
     // console.log("TICKER DATA: ", data);

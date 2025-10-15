@@ -49,14 +49,17 @@ const OrderPanel = ({ market }: { market: string }) => {
     }
 
     try {
-      const res = await axios.post("http://localhost:3001/api/v1/order", {
-        market: market,
-        price: Number(price),
-        quantity: Number(quantity),
-        side: side,
-        userId: userId.toString(),
-        type: "limit",
-      });
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}api/v1/order`,
+        {
+          market: market,
+          price: Number(price),
+          quantity: Number(quantity),
+          side: side,
+          userId: userId.toString(),
+          type: "limit",
+        }
+      );
       console.log("Limit Order Placed", res.data);
       refetchUserBalance();
       toast.success("Limit Order Placed Successfully");
@@ -96,14 +99,17 @@ const OrderPanel = ({ market }: { market: string }) => {
     }
 
     try {
-      const res = await axios.post("http://localhost:3001/api/v1/order", {
-        market: market,
-        price: Number(ticker.price),
-        quantity: solQuantity,
-        side: side,
-        userId: userId.toString(),
-        type: "market",
-      });
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}api/v1/order`,
+        {
+          market: market,
+          price: Number(ticker.price),
+          quantity: solQuantity,
+          side: side,
+          userId: userId.toString(),
+          type: "market",
+        }
+      );
       console.log("Market Order Placed", res.data);
       refetchUserBalance();
       toast.success("Market Order Placed Successfully");

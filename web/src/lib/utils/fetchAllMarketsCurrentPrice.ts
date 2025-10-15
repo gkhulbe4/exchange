@@ -3,7 +3,7 @@ import axios from "axios";
 export async function fetchAllMarketsCurrentPrice() {
   try {
     const res = await axios.get(
-      "http://localhost:3001/api/v1/trade/getAllMarketCurrentPrices"
+      `${import.meta.env.VITE_API_URL}api/v1/trade/getAllMarketCurrentPrices`
     );
     const data = res.data;
     return data;

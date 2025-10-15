@@ -4,7 +4,7 @@ export async function fetchOrders(market: string) {
   try {
     // console.log("i am in fetchOrder");
     const res = await axios.get(
-      `http://localhost:3001/api/v1/order/getOrders?market=${market}`
+      `${import.meta.env.VITE_API_URL}api/v1/order/getOrders?market=${market}`
     );
     console.log("FETCHED ORDER DATA");
     return res.data.response;

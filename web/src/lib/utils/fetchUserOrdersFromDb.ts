@@ -3,7 +3,9 @@ import axios from "axios";
 export async function fetchUserOrdersFromDb(userId: string) {
   try {
     const res = await axios.get(
-      `http://localhost:3001/api/v1/order/getUserOrdersFromDb?userId=${userId}`
+      `${
+        import.meta.env.VITE_API_URL
+      }api/v1/order/getUserOrdersFromDb?userId=${userId}`
     );
     const data = res.data;
     return data;

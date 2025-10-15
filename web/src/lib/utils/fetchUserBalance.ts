@@ -3,7 +3,7 @@ import axios from "axios";
 export async function fetchUserBalance(userId: string) {
   try {
     const res = await axios.get(
-      `http://localhost:3001/api/v1/user/getBalance?userId=${userId}`
+      `${import.meta.env.VITE_API_URL}api/v1/user/getBalance?userId=${userId}`
     );
     if (res.status == 200) {
       return res.data.response;

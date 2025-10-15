@@ -30,7 +30,7 @@ function CancelOrderDialog({
   async function cancelOrder() {
     try {
       const res = await axios.post(
-        "http://localhost:3001/api/v1/order/cancelOrder",
+        `${import.meta.env.VITE_API_URL}api/v1/order/cancelOrder`,
         {
           userId: userId,
           market: market,
