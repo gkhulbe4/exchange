@@ -1,4 +1,5 @@
 import axios from "axios";
+import "dotenv/config";
 
 type Order = {
   orderId: string;
@@ -23,7 +24,7 @@ async function makeOrder(orderDetails: {
   userId: string;
 }) {
   try {
-    await axios.post("http://localhost:3001/api/v1/order", orderDetails);
+    await axios.post(`${process.env.API_URL}api/v1/order`, orderDetails);
     console.log("Order placed:", orderDetails);
   } catch (error) {
     console.error("Error placing order:", error);
@@ -63,7 +64,7 @@ async function startMarketMaker() {
       const userId = userIds[Math.floor(Math.random() * userIds.length)];
       const market = markets[Math.floor(Math.random() * markets.length)];
       const res = await axios.get(
-        `http://localhost:3001/api/v1/order/getOrders?market=${market}`
+        `${process.env.API_URL}api/v1/order/getOrders?market=${market}`
       );
       const data = res.data;
       const allBuys: Order[] = data.response.buys || [];

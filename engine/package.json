@@ -13,7 +13,12 @@
   "license": "ISC",
   "packageManager": "pnpm@10.14.0",
   "dependencies": {
+    "@types/dotenv": "^8.2.3",
+    "dotenv": "^17.2.3",
     "ioredis": "^5.7.0",
     "typescript": "^5.9.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.7.2"
   }
 }

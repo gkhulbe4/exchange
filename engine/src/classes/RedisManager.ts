@@ -8,8 +8,9 @@ export class RedisManager {
   public pubClient: Redis;
 
   constructor() {
-    this.subClient = new Redis();
-    this.pubClient = new Redis();
+    const redisUrl = process.env.REDIS_URL as string;
+    this.subClient = new Redis(redisUrl);
+    this.pubClient = new Redis(redisUrl);
   }
 
   static getInstance() {
