@@ -10,7 +10,9 @@ export class RedisManager {
 
   constructor() {
     const redisUrl = process.env.REDIS_URL;
+    console.log(redisUrl);
     if (!redisUrl) {
+      console.error("REDIS_URL environment variable is required but not set");
       throw new Error("REDIS_URL environment variable is required but not set");
     }
     this.subClient = new Redis(redisUrl, {
