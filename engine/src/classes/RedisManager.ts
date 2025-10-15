@@ -9,9 +9,25 @@ export class RedisManager {
   public pubClient: Redis;
 
   constructor() {
-    const redisUrl = process.env.REDIS_URL as string;
-    this.subClient = new Redis(redisUrl);
-    this.pubClient = new Redis(redisUrl);
+    const redisUrl = process.env.REDIS_URL;
+    if (!redisUrl) {
+      throw new Error("REDIS_URL environment variable is required but not set");
+    }
+    this.subClient = new Redis(redisUrl, {
+      retryStrategy: (times) => {
+        // retry up to 5 times
+        return Math.min(times * 50, 2000);
+      },
+      maxRetriesPerRequest: 1,
+    });
+
+    this.pubClient = new Redis(redisUrl, {
+      retryStrategy: (times) => {
+        // retry up to 5 times
+        return Math.min(times * 50, 2000);
+      },
+      maxRetriesPerRequest: 1,
+    });
   }
 
   static getInstance() {
