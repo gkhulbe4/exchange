@@ -39,7 +39,8 @@
     "verbatimModuleSyntax": false,
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
-    "moduleDetection": "force",
-    "skipLibCheck": true
+    // "moduleDetection": "force",
+    "skipLibCheck": true,
+    "resolveJsonModule": true
   }
 }
