@@ -8,22 +8,22 @@ importers:
 
   .:
     dependencies:
-      '@types/dotenv':
-        specifier: ^8.2.3
-        version: 8.2.3
       dotenv:
         specifier: ^17.2.3
         version: 17.2.3
       ioredis:
         specifier: ^5.7.0
         version: 5.7.0
-      typescript:
-        specifier: ^5.9.2
-        version: 5.9.2
     devDependencies:
+      '@types/dotenv':
+        specifier: ^8.2.3
+        version: 8.2.3
       '@types/node':
         specifier: ^24.7.2
         version: 24.7.2
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.2
 
 packages:
 
