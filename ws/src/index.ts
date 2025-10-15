@@ -1,8 +1,10 @@
 import { WebSocket, WebSocketServer } from "ws";
 import { UserManager } from "./classes/UserManager";
+import "dotenv/config";
 
 function main() {
-  const wss = new WebSocketServer({ port: 8080 });
+  const port = Number(process.env.PORT) || 8080;
+  const wss = new WebSocketServer({ port });
   wss.on("connection", (ws: WebSocket, request) => {
     const url = request.url;
     if (!url) {
