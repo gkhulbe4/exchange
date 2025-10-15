@@ -13,6 +13,7 @@
   "license": "ISC",
   "packageManager": "pnpm@10.15.1",
   "dependencies": {
+    "@types/dotenv": "^8.2.3",
     "@types/ws": "^8.18.1",
     "dotenv": "^17.2.3",
     "ioredis": "^5.7.0",
