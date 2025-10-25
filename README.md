@@ -1,4 +1,4 @@
-# ZenithX Trading Platform 📈
+# ZenithX - Trading Platform 📈
 
 A real-time, high-performance trading platform built with a modular architecture, designed for instant order placement, matching, and tracking. Scalable, fast, and reliable.
 
