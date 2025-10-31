@@ -29,6 +29,12 @@ Clear separation of responsibilities across modules:
 
 ---
 
+## Demo Video
+
+https://www.linkedin.com/posts/garvit-khulbe-60b671245_webdevelopment-fullstack-realtimetrading-activity-7377290754148196353-z-UM?utm_source=social_share_send&utm_medium=member_desktop_web&rcm=ACoAADzJ2SsBEAPCw6krgQ3VzdT0AeD-T8fDCVE
+
+---
+
 ## 🏗 Architecture
 
 ![ZenithX Architecture](https://github.com/user-attachments/assets/20610098-2573-44eb-bc90-b7eab488dc12)
