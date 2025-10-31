@@ -29,9 +29,9 @@ Clear separation of responsibilities across modules:
 
 ---
 
-## Demo Video
+## 🎥 Project Demo
 
-https://www.linkedin.com/posts/garvit-khulbe-60b671245_webdevelopment-fullstack-realtimetrading-activity-7377290754148196353-z-UM?utm_source=social_share_send&utm_medium=member_desktop_web&rcm=ACoAADzJ2SsBEAPCw6krgQ3VzdT0AeD-T8fDCVE
+![Watch the video](https://github.com/user-attachments/assets/95c4c02b-638d-414a-87ec-b28223650fd5)
 
 ---
 
