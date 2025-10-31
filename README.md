@@ -31,7 +31,9 @@ Clear separation of responsibilities across modules:
 
 ## 🎥 Project Demo
 
-![Watch the video](https://github.com/user-attachments/assets/95c4c02b-638d-414a-87ec-b28223650fd5)
+Watch the full demo below:  
+[![Watch the video](https://img.youtube.com/vi/lnidUCqrBi8/0.jpg)](https://www.youtube.com/watch?v=lnidUCqrBi8)
+
 
 ---
 
