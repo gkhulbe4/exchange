@@ -29,15 +29,9 @@ Clear separation of responsibilities across modules:
 
 ---
 
-## 🎥 Demo Video
+## 🎥 Project Demo
 
-<p align="center">
-  <a href="https://www.youtube.com/watch?v=lnidUCqrBi8" target="_blank">
-    <img src="https://img.youtube.com/vi/lnidUCqrBi8/maxresdefault.jpg" alt="Appx SDK Demo Video" width="600">
-  </a>
-</p>
-
-
+https://github.com/user-attachments/assets/8e4ba336-3f77-400a-864f-bb920ace604d
 
 ---
 
